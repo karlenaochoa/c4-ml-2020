@@ -1,0 +1,27 @@
+---
+title: "Schedule"
+---
+
+| **Week** | **Date** | **Theme**                                                                  | **Assignment Assigned**         | **Assignment Due**      | **Reading**                    |
+| :------: | :------: | :--------------------------------------------------------------------------| :------------------------------ | :---------------------- | :----------------------------- |
+|  1a      | 4/30/20  | Intro to course<br/>Installing software                                    | Final Project                   |                         | [HML Ch. 1](https://bradleyboehmke.github.io/HOML/intro.html)                      |
+|  1b      | 5/1/20   | Inference vs. Prediction<br/>Estimating f<br/>Regression vs Classification |                                 |                         | APM: Ch. 1<br/>ISLR: Ch. 2.1   |
+|  2a      | 5/6/20   | Bias-variance tradeoff<br/>test set<br/>k-fold CV                          |                                 |                         | ISLR: Ch. 2.2<br/>ISLR: Ch 5.1 |
+|  2b      | 5/8/20   | Lab: k-fold CV for variable selection                                      | Lab 1                           |                         |                                |
+|  3a      | 5/13/20  | Penalized regression                                                       |                                 |                         | [HML: Ch. 6](https://bradleyboehmke.github.io/HOML/regularized-regression.html)                     |
+|  3b      | 5/15/20  | Lab: Ridge, Lasso, & Elastic net                                           | Lab 2                           | Lab 1                   |                                |
+|  4a      | 5/20/20  | k-nearest neighbor & MARS                                                  |                                 |                         | [HML: Ch. 8](https://bradleyboehmke.github.io/HOML/knn.html)                     |
+|  4b      | 5/22/20  | Lab                                                                        | Lab 3                           | Lab 2                   | [HML: Ch. 7](https://bradleyboehmke.github.io/HOML/mars.html)                     |
+|  5a      | 5/27/20  | Feature engineering                                                        |                                 |                         | [FE: Ch. 1 ](http://www.feat.engineering/intro-intro.html)                     |
+|  5b      | 5/29/20  | Dimension Reduction                                                        |                                 | Lab 3<br/>Prelim fits 1 | [HML: Ch. 17](https://bradleyboehmke.github.io/HOML/pca.html)                    |
+|  6a      | 6/4/20   | Model performance                                                          |                                 |                         | APM: Ch. 5<br/>APM: Ch. 11     |
+|  6b      | 6/6/20   | Lab: Measuring performance                                                 | Lab 4                           |                         |                                |
+|  7a      | 6/11/20  | Decision trees                                                             |                                 |                         | [HML: Ch. 9](https://bradleyboehmke.github.io/HOML/DT.html)                     |
+|  7b      | 6/13/20  | Lab                                                                        | Lab 5                           | Lab 4                   |                                |
+|  8a      | 6/18/20  | Bagged trees <br/>Random forests                                           |                                 |                         | [HML: Ch. 10](https://bradleyboehmke.github.io/HOML/bagging.html), [11](https://bradleyboehmke.github.io/HOML/random-forest.html)                |
+|  8b      | 6/20/20  | Lab                                                                        | Lab 6                           | Lab 5<br/>Prelim fits 2 |                                |
+|  9a      | 6/25/20  | Boosted trees                                                              |                                 |                         | [HML Ch. 12](https://bradleyboehmke.github.io/HOML/gbm.html)                     |
+|  9b      | 6/27/20  | Work Day                                                                   |                                 | Lab 6                   |                                |
+|  10a     | 7/1/20   | ML Ethics                                                                  |                                 |                         | [Floridi & Taddeo (2016)](https://royalsocietypublishing.org/doi/full/10.1098/rsta.2016.0360)        |
+|  10b     | 7/3/20   | HPC & Advanced topics in ML                                                |                                 |                         |                                |
+|  Finals Week | 7/8/20 - 7/12/20 |                                                                |                                 |Final Project            |                                |

@@ -1,0 +1,33 @@
+---
+title: "Assignments"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+Note - There are 19 course meetings. Attendance is required at all meetings, 
+and are scored at one point each, with one point provided as a given. Thus,
+20 points for the class (10%) are associated with attendance.
+
+# Labs
+### 60 points (10 points each)
+
+|**Lab** | **Topic**                                         | **Assigned** | **Due** | 
+|:------:| :------------------------------------------------ | :------------| :-------| 
+| 1      | *k*-fold cross validation                         | 4/7/20       | 4/14/20 | 
+| 2      | Penalized regression (ridge, lasso, & elastic net)| 4/14/20      | 4/21/20 |
+| 3      | *k*-nearest neighbor                              | 4/21/20      | 4/28/20 | 
+| 4      | Measuring model performance                       | 5/5/20       | 5/12/20 | 
+| 5      | Decision trees                                    | 5/12/20      | 5/19/20 | 
+| 6      | Random forests/bagging                            | 5/19/20      | 5/26/20 | 
+
+
+# Final Project
+### 120 points
+
+|**Component**           | **Due** | 
+|:-----------------------|:--------| 
+| [Preliminary fits 1]() | 4/28/20 | 
+| [Preliminary fits 2]() | 2/26/20 | 
+| [Blog post]()          | 6/9/20  | 
