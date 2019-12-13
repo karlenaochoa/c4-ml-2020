@@ -1,0 +1,710 @@
+---
+title: "Decision Trees"
+subtitle: "An introduction"
+author: "Daniel Anderson "
+date: "Week 7, Class 1 "
+output:
+  xaringan::moon_reader:
+    css: ["default", "uo", "uo-fonts", "hygge", "custom.css"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-dune-light
+      highlightLines: true
+      countIncrementalSlides: false
+      beforeInit: "https://platform.twitter.com/widgets.js"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 13, 
+                      message = FALSE, 
+                      warning = FALSE,
+                      echo = TRUE)
+
+library(tidyverse)
+
+update_geom_defaults('path', list(size = 3, color = "cornflowerblue"))
+update_geom_defaults('point', list(size = 5, color = "gray60"))
+theme_set(theme_minimal(base_size = 25))
+```
+
+# Agenda 
+
+* Overview of CART trees
+* Finding an optimal tree - complexity parameter
+* Feature interpretation (quickly)
+
+---
+# Overview
+* Non-parametric (do not make any distributional assumptions)
+
+* Use splitting rules to divide features into non-overlapping regions, where the cases within each region are similar
+
+* Basically the stepping stone for more complex models - generally don't work great on their own.
+
+---
+# Classification
+* Decision trees are often easiest to think of, initially, through a classification problem
+* Think about the titanic dataset - did passengers aboard survive?
+
+---
+# An example from the titanic
+
+![](https://supchains.com/wp-content/uploads/2017/11/Titanic_Survival_Decison_Tree_SVG.png)
+
+---
+# Some terminology
+![](https://bradleyboehmke.github.io/HOML/images/decision-tree-terminology.png)
+
+Note the leaf node is also called the terminal node
+
+---
+# Splitting rules
+* .red[C]lassification .red[a]nd .red[r]egression .red[t]rees (CART)
+
+  - Partition training data into homogeneous subgroups through recursive splitting (yes/no) until some criterion is reached 
+  - Recursive because each split depends on prior splits
+
+--
+
+* At each node, find the "best" partition
+  - search all possible splits on all possible variables
+
+--
+
+* How to define best?
+  - Regression
+      + SSE: $\Sigma_{R1}(y_i - c_1)^2 + \Sigma_{R2}(y_i - c_2)^2$
+        * $c$ starts as a constant and is updated, $R$ is the region
+  - Classification
+      + Cross-entropy or Gini index (default)
+
+---
+# Gini index
+Default measure of lack of fit used by `rpart`. For a two class situation:
+
+$$
+D_i = 1 - P(c_1)^2 - P(c_2)^2
+$$
+
+where $P(c_1)$ and $P(c_2)$ are the probabilities of being in Class 1 or 2, respectively, for node $i$
+
+For a multi-class solution
+
+$$
+D_i = 1 - \Sigma(p_i)^2
+$$
+
+So
+* When $D = 0$, the node is "pure" (perfect classification)
+* When $D = 0.5$, the node is random (flip a coin)
+
+
+---
+# A couple examples
+* Say your terminal node has 75%  in one class, for a binary decision. The Gini index would be
+
+.left[
+$$
+\begin{aligned}
+D &= 1 - (0.75^2 + 0.25^2) \\\
+D &= 1 - (0.5625 + 0.0625) \\\
+D &= 1 - 0.625 \\\
+D &= 0.375
+\end{aligned}
+$$
+
+]
+
+---
+# 90%
+
+$$
+\begin{aligned}
+D &= 1 - (0.90^2 + 0.10^2) \\
+D &= 1 - (0.81 + 0.01) \\
+D &= 1 - 0.82 \\
+D &= 0.18
+\end{aligned}
+$$
+
+--
+### Take home message - lower values mean better classifications
+
+
+---
+background-image: url(https://bradleyboehmke.github.io/HOML/07-decision-trees_files/figure-html/decision-stump-1.png)
+background-size:cover
+
+# Visualizing splits
+
+---
+background-image: url(https://bradleyboehmke.github.io/HOML/07-decision-trees_files/figure-html/decision-stump-2.png)
+background-size:cover
+
+
+---
+# Replicating the book
+### Generate some data
+```{r generate-sin-data}
+n <- 200 # number of data points
+x <- seq(0, 3.5, length.out = n)
+a <- 5
+b <- 2
+error <- rnorm(n)
+amp <- 4
+
+# generate data and calculate "y"
+set.seed(1)
+y <- a*sin(b*x)+error*amp 
+```
+
+---
+
+```{r plot-sin}
+library(tidyverse)
+
+sin_df <- tibble(x = x, y = y, truth = a*sin(b*x))
+ggplot(sin_df, aes(x, y)) +
+  geom_point() +
+  geom_line(aes(y = truth))
+```
+
+
+---
+# Fit a simple model - one split
+
+```{r decision-tree}
+library(rpart)
+library(rpart.plot)
+
+mean(sin_df$y)
+
+stump <- rpart(y ~ x, 
+               data = sin_df,
+               control = list(maxdepth = 1)) # limit tree depth #<< 
+```
+
+---
+```{r stump-summary}
+summary(stump)
+```
+
+---
+# View the tree
+
+```{r view-stump, fig.width = 5, fig.height = 8}
+rpart.plot(stump)
+```
+
+---
+# Visualize the split
+
+```{r one-splt, fig.height = 5}
+sin_df %>%
+  mutate(pred = predict(stump)) %>%
+ggplot(aes(x, y)) +
+  geom_point() +
+  geom_line(aes(y = truth)) +
+  geom_line(aes(y = pred), color = "red")
+```
+
+---
+# More complicated
+* Note that we only have one predictor - but we can use that predictor multiple times
+
+* Let's specify it again with two splits
+
+```{r twosplit}
+twosplit <- rpart(y ~ x, 
+                  data = sin_df,
+                  control = list(maxdepth = 2))
+```
+
+---
+# View tree
+```{r twosplit-tree}
+rpart.plot(twosplit)
+
+```
+
+---
+# Visualize two splits
+
+```{r two-splt, fig.height = 5}
+sin_df %>%
+  mutate(pred = predict(twosplit)) %>%
+ggplot(aes(x, y)) +
+  geom_point() +
+  geom_line(aes(y = truth)) +
+  geom_line(aes(y = pred), color = "red")
+```
+
+---
+# More complicated
+Let's try with 10 splits
+
+```{r tensplit}
+tensplit <- rpart(y ~ x, 
+                  data = sin_df,
+                  control = list(minsplit = 0,
+                                 cp = 0,
+                                 maxdepth = 10))
+```
+
+Notice I've changed the complexity parameter, `cp`, to be 0, which will force it to grow a full tree (more on this in a bit)
+
+---
+```{r tensplit-tree}
+rpart.plot(tensplit)
+```
+
+---
+
+```{r ten-splt}
+sin_df %>%
+  mutate(pred = predict(tensplit)) %>%
+ggplot(aes(x, y)) +
+  geom_point() +
+  geom_line(aes(y = truth)) +
+  geom_line(aes(y = pred), color = "red")
+```
+
+---
+# Tree depth
+* The above probably leaves you thinking... how deep should I grow the trees?
+  + Super deep - likely to overfit (high variance)
+  + Super shallow - likely to underfit (high bias)
+
+
+
+--
+### Two primary approaches
+
+* Stop the tree early
+* Grow the tree deep, then prune it back
+
+
+---
+# Stopping early
+Two primary approaches: 
+
+* Limit the depth
+* Limit the *n* size within a terminal node
+
+---
+background-image: url(https://bradleyboehmke.github.io/HOML/07-decision-trees_files/figure-html/dt-early-stopping-1.png)
+background-size:cover
+
+---
+# Pruning
+* Tree is grown to a great depth, increasing the likelihood that important interactions in the data are captured.
+* The large tree is "pruned" to a smaller subtree that captures (ideally) only the meaningful variation in the data.
+
+
+
+--
+### Cost complexity
+* Typically denoted $\alpha$, the cost complexity introduces a penalization to the SSE (discussed earlier).
+
+$$
+SSE + \alpha\mid{T}\mid
+$$
+
+where $T$ is the number of terminal nodes/leafs
+
+---
+# Cost complexity
+
+* The equation on the previous slide is .red[minimized] and, for a given $\alpha$, we identify (from the large tree) a subtree with the lowest penalized error.
+
+* There is a clear association between this penalization and lasso regression.
+
+* $\alpha$ is typically determined via grid search with cross-validation
+  - smaller penalties = more complex trees
+  - larger penalties = smaller trees
+
+* When pruning a tree, the reduction in the SSE must be larger than the cost complexity penalty.
+
+---
+## What about for classification problems?
+The basic structure is the same - split the predictor space into regions, make predictions based on the most prominent class
+
+```{r iris}
+class <- rpart(Species ~ Sepal.Length + Sepal.Width, 
+               data = iris,
+               method = "class")
+```
+
+Notice I've added `method = class` to specify it as a classification problem. If `y` is a factor it will do this automatically, but good to be specific.
+
+---
+```{r class-tree}
+rpart.plot(class)
+```
+
+---
+```{r iris-regions, echo = FALSE, fig.height = 8}
+preds <- tibble(Prediction = c("Setosa", 
+                               "Versicolor", 
+                               "Setosa", 
+                               "Versicolor",
+                               "Virginica"),
+                xmins = c(-Inf, -Inf, 5.5, 5.5, 6.2),
+                xmaxs = c(5.5, 5.5, 6.2, 6.2, Inf),
+                ymins = c(2.8, -Inf, 3.1, -Inf, -Inf),
+                ymaxs = c(Inf, 2.8, Inf, 3.1, Inf))
+
+ggplot(iris, aes(Sepal.Length, Sepal.Width)) +
+  geom_point(aes(shape = Species,
+                 color = Species)) +
+  geom_rect(aes(fill = Prediction, 
+                xmin = xmins, 
+                xmax = xmaxs, 
+                ymin = ymins, 
+                ymax = ymaxs), 
+            color = "gray40",
+            data = preds,
+            alpha = 0.3,
+            inherit.aes = FALSE)
+```
+
+---
+# An applied example
+* Let's look at the Kaggle data science bowl data again
+
+```{r load-kaggle-data}
+train <- read_csv(
+    here::here("data", "data-science-bowl-2019", "train.csv"),
+    n_max = 7e4 # Limit cases for speed of producing these slides
+  ) %>%
+  select(-event_data)
+
+train_labels <- read_csv(
+  here::here("data", "data-science-bowl-2019", "train_labels.csv")
+)
+```
+
+
+---
+# Inspect the keys
+
+```{r inspect-keys}
+train_labels %>%
+  count(game_session, installation_id) %>%
+  filter(n > 1)
+
+train %>%
+  count(game_session, installation_id) %>%
+  filter(n > 1)
+```
+
+---
+# Join the data
+
+```{r join-data}
+k_train <- left_join(train, train_labels)
+
+# check join is as expected
+nrow(train); nrow(k_train)
+```
+
+---
+# Select only vars in test data
+
+```{r select-vars}
+model_set <- k_train %>%
+  select(event_count, event_code, game_time, title, world, 
+         accuracy_group) %>%
+  drop_na(accuracy_group)
+model_set
+```
+
+---
+# Fit preliminary model
+
+```{r kaggle-prelim-model}
+kag_m1 <- rpart(accuracy_group ~ ., 
+                data = model_set,
+                method = "class")
+```
+
+---
+# View tree
+
+```{r kagg-prelim-tree}
+rpart.plot(kag_m1)
+```
+
+---
+# Why this tree?
+* `rpart` automatically performs 10-fold CV to a range of $\alpha$ values
+
+* In this example, we don't get much information after 4 splits
+
+
+---
+# View the CV cost complexity
+* Y - axis is the CV error
+* bottom x-axis is $\alpha$, top is number of terminal nodes
+* horizontal line is 1 SE above minimum
+
+```{r cost-complexity-cv1, fig.height = 5}
+plotcp(kag_m1)
+```
+
+---
+# Change what's on top
+
+```{r cost-complexity-cv2}
+plotcp(kag_m1, upper = "splits")
+```
+
+---
+# Set cost complexity to zero
+
+```{r cost-complexity-cv3, fig.height = 5}
+kag_m2 <- rpart(accuracy_group ~ ., 
+                data = model_set,
+                method = "class",
+                control = list(cp = 0))
+plotcp(kag_m2)
+abline(v = 5, col = "cornflowerblue", lwd = 2)
+```
+
+---
+# Get CV results
+
+```{r cv-results}
+kag_m1$cptable
+```
+
+---
+# 🤨
+
+I'll be honest, the errors on the previous slide confuse me a bit in this case because they are clearly not Gini index values.
+
+
+--
+In a regression problem, the rel error is 1 - $R^2$. But what does it represent in classification problems? 
+
+
+--
+# 🤷
+I looked a lot and couldn't find it. Let me know if you find out.
+
+
+--
+`xerror` is the 10-fold cross validation error. This is what you should select to prune your tree (if you want to prune it beyond the default)
+
+
+--
+`xstd` is the standard deviation of the error rate from the cross-validation
+
+
+---
+## What I do know about these values
+* `rel error` can be multiplied by the root node error to obtain the *resubstitution* error rate - i.e., 1 - the classification accuracy for the model when evaluated against the data it was trained on.
+
+---
+```{r printcp}
+printcp(kag_m1)
+```
+
+---
+* Our best `rel error` value was `0.59544` with a root node error of `0.5985`.
+
+
+--
+The resubstitution error is therefore: $0.59544 * 0.5985 = 0.3563708$
+
+
+---
+# Confirm
+### First look at the table
+
+```{r pred-table}
+class_pred <- table("Model Prediction" = predict(kag_m1, type = "class"), 
+                    "Observed" = model_set$accuracy_group)
+class_pred
+
+correct_predictions <- sum(diag(class_pred))
+n_cases <- sum(class_pred)
+1 - (correct_predictions/n_cases)
+```
+
+---
+# Same thing with `xerror`
+The results on the previous slide are overly optimistic. What do we get with the cross-validated error?
+
+
+--
+$0.60200 * 0.5985 = 0.360297$
+
+
+--
+In this case, just slightly higher error rate.
+
+
+---
+# Prune the tree
+There may be cases when you want to manually prune the tree becuase you think it's overfit. We could go back to our full tree but that will result in a really deep tree in this case that definitely overfits (I tried)
+
+
+--
+Let's say we wanted the tree that with an `xerror` 1 SE below the minimum
+
+```{r full-tree-cp}
+kag_m1$cptable
+```
+
+---
+# Filter for min `xerror`
+
+```{r full-tree-min-cp}
+kag_m1$cptable %>% 
+  as.data.frame() %>%  # cptable is a matrix...
+  filter(xerror == min(xerror))
+```
+
+
+---
+# Find CP values >= 1 SE
+
+```{r one-se1}
+kag_m1$cptable %>% 
+  as.data.frame() %>%  # cptable is a matrix...
+  filter(xerror >= 0.6020021 + 0.01152929)
+```
+
+---
+# Pull CP from min of these
+
+```{r one-se2}
+best_cp <- kag_m1$cptable %>% 
+  as.data.frame() %>%  # cptable is a matrix...
+  filter(xerror >= 0.6020021 + 0.01152929) %>% 
+  filter(xerror == min(xerror)) %>% 
+  pull(CP)
+best_cp
+```
+
+
+---
+# Prune tree
+```{r prune-tree}
+pruned <- prune(kag_m1, cp = best_cp)
+rpart.plot(pruned)
+```
+
+---
+# Want other metrics?
+* I think these error rates are sort of difficult to interpret in classification problems.
+
+* Use {caret} to get other metrics.
+
+```{r caret-data-prep}
+# minor data prep
+model_set2 <- model_set %>% 
+  mutate(
+    accuracy_group = factor(paste("score", accuracy_group, sep = "_"))
+  )
+model_set2
+```
+
+
+---
+# Train model
+
+```{r caret-train}
+library(caret)
+train_cv <- train(
+  accuracy_group ~ .,
+  data = model_set2,
+  method = "rpart",
+  metric = "AUC",
+  trControl = trainControl(method = "cv", 
+                           number = 10, 
+                           summaryFunction = multiClassSummary,
+                           classProbs = TRUE),
+  tuneLength = 20
+)
+```
+
+---
+# Plot
+```{r caret-plot}
+plot(train_cv) 
+```
+
+---
+# Other metrics
+```{r train_cv-metrics}
+train_cv$results %>% 
+  as_tibble()
+```
+
+---
+# Plot accuracy
+
+```{r plot-accuracy}
+ggplot(train_cv$results, aes(cp, Accuracy)) +
+  geom_line() +
+  geom_point()
+```
+
+---
+# Feature interpretation
+### Which is the most important feature?
+
+```{r vip1, fig.height = 6}
+library(vip)
+vip(train_cv)
+```
+
+---
+# Partial dependency plots
+```{r pdps1, fig.height = 6.5}
+library(pdp)
+partial(train_cv, pred.var = "game_time") %>% 
+  autoplot()
+```
+
+---
+# Event count
+```{r pdps2, fig.height = 6.5}
+partial(train_cv, pred.var = "event_count") %>% 
+  autoplot()
+```
+
+---
+# Game time and event count
+
+```{r pdps3, fig.height = 6.5}
+partial(train_cv, pred.var = c("game_time", "event_count")) %>% 
+  autoplot()
+```
+
+---
+# Alternative representation
+
+```{r pdps4, fig.height = 6.5}
+partial(train_cv, pred.var = c("game_time", "event_count")) %>% 
+  plotPartial(levelplot = FALSE)
+```
+
+---
+# Conclusions
+* Decision trees have a lot of benefits
+  - Non-parametric 
+  - Easily interpretable (follow a branch)
+  - Can produce highly non-linear models
+
+
+--
+* They also have a lot of drawbacks
+  - Generally not the most predictive out-of-sample
+  - Can produce highly non-linear models
+
+
+--
+* We'll have a lab on decision trees next class, then extend this discussion to models that build ensembles of trees starting next week.
