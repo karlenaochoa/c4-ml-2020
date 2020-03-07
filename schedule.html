@@ -306,193 +306,239 @@ $(document).ready(function () {
 </div>
 
 
-<table>
+<table style="width:100%;">
 <colgroup>
-<col width="4%" />
-<col width="4%" />
-<col width="42%" />
-<col width="17%" />
-<col width="13%" />
-<col width="17%" />
+<col width="2%" />
+<col width="3%" />
+<col width="8%" />
+<col width="22%" />
+<col width="36%" />
+<col width="8%" />
+<col width="6%" />
+<col width="11%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"><strong>Week</strong></th>
+<th align="left"><strong>Week</strong></th>
 <th align="center"><strong>Date</strong></th>
-<th align="left"><strong>Theme</strong></th>
-<th align="left"><strong>Assignment Assigned</strong></th>
-<th align="left"><strong>Assignment Due</strong></th>
-<th align="left"><strong>Reading</strong></th>
+<th align="center"><strong>Lead Instructor</strong></th>
+<th align="center"><strong>Topic</strong></th>
+<th align="center"><strong>Functions introduced</strong></th>
+<th align="center"><strong>Assigned</strong></th>
+<th align="center"><strong>Due</strong></th>
+<th align="center"><strong>Reading</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center">1a</td>
-<td align="center">4/30/20</td>
-<td align="left">Intro to course<br/>Installing software</td>
-<td align="left">Final Project</td>
-<td align="left"></td>
-<td align="left"><a href="https://bradleyboehmke.github.io/HOML/intro.html">HML Ch. 1</a></td>
+<td align="left">1a</td>
+<td align="center">3/30/20</td>
+<td align="center">Joe</td>
+<td align="center">Intro to course<br/>Installing software</td>
+<td align="center"></td>
+<td align="center">Final <br/>Get to know data?</td>
+<td align="center"></td>
+<td align="center">HML Ch. 1</td>
 </tr>
 <tr class="even">
-<td align="center">1b</td>
-<td align="center">5/1/20</td>
-<td align="left">Inference vs. Prediction<br/>Estimating f<br/>Regression vs Classification</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">APM: Ch. 1<br/>ISLR: Ch. 2.1</td>
+<td align="left">1b</td>
+<td align="center">4/1/20</td>
+<td align="center">Daniel</td>
+<td align="center">Inference vs. Prediction<br/>Estimating f<br/>Regression vs Classification</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">APM: Ch. 1<br/>ISLR: Ch. 2.1</td>
 </tr>
 <tr class="odd">
-<td align="center">2a</td>
+<td align="left">2a</td>
+<td align="center">4/6/20</td>
+<td align="center">Joe</td>
+<td align="center">Bias-variance tradeoff<br/>test set<br/>k-fold CV (&amp; repeats)</td>
+<td align="center"><code>initial_split</code><br/><code>train()</code><br/><code>test()</code><br/><code>vfold_cv</code></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">ISLR: Ch. 2.2<br/>ISLR: Ch 5.1</td>
+</tr>
+<tr class="even">
+<td align="left">2b</td>
+<td align="center">4/8/20</td>
+<td align="center">Joe</td>
+<td align="center"><em>Lab: k-fold CV (use purrr to mutate column; to understand k-fold process)</em></td>
+<td align="center"></td>
+<td align="center">Lab 1</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="left">3a</td>
+<td align="center">4/13/20</td>
+<td align="center">Daniel</td>
+<td align="center">Variable Selection &amp; <br/>Model performance</td>
+<td align="center">Choose “model function”<br/><code>set_engine()</code><br/><code>set_mode()</code><br/><code>fit_resamples()</code><br/><code>collect_metrics()</code><br/><code>select_best()</code></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">HML: Ch. 6<br/>APM: Ch. 5<br/>APM: Ch. 11</td>
+</tr>
+<tr class="even">
+<td align="left">3b</td>
+<td align="center">4/15/20</td>
+<td align="center">Daniel</td>
+<td align="center">Lab: Building a predictive lm and Measuring performance</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="left">4a</td>
+<td align="center">4/20/20</td>
+<td align="center">Joe</td>
+<td align="center">Extensions of lm: Ridge, Lasso, Elastic net</td>
+<td align="center">New arguments to <code>linear_reg()</code><br/><code>tune_grid()</code><br/><code>show_best()</code></td>
+<td align="center">Lab 2</td>
+<td align="center">Lab 1</td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="left">4b</td>
+<td align="center">4/22/20</td>
+<td align="center">Joe</td>
+<td align="center">LAB:<br/>Penalized Regression</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="left">5a</td>
+<td align="center">4/27/20</td>
+<td align="center">Daniel</td>
+<td align="center">Feature engineering</td>
+<td align="center"><a href="https://tidymodels.github.io/recipes/">{recipes}</a></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="left">5b</td>
+<td align="center">4/29/20</td>
+<td align="center">Daniel</td>
+<td align="center">LAB: <br/>Feature Engineering (Dimension Reduction)</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="left">6a</td>
+<td align="center">5/4/20</td>
+<td align="center">Joe</td>
+<td align="center"><em>k-nearest neighbor</em></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">HML: Ch. 8</td>
+</tr>
+<tr class="even">
+<td align="left">6b</td>
 <td align="center">5/6/20</td>
-<td align="left">Bias-variance tradeoff<br/>test set<br/>k-fold CV</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">ISLR: Ch. 2.2<br/>ISLR: Ch 5.1</td>
-</tr>
-<tr class="even">
-<td align="center">2b</td>
-<td align="center">5/8/20</td>
-<td align="left">Lab: k-fold CV for variable selection</td>
-<td align="left">Lab 1</td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="center">Joe</td>
+<td align="center">Lab</td>
+<td align="center"><code>expand.grid()</code> OR tidymodel version for neighbors arg<br/>tune pca components</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">FE: Ch. 1<br/>HML: Ch. 17</td>
 </tr>
 <tr class="odd">
-<td align="center">3a</td>
+<td align="left">7a</td>
+<td align="center">5/11/20</td>
+<td align="center">Daniel</td>
+<td align="center">Decision trees</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">HML: Ch. 9</td>
+</tr>
+<tr class="even">
+<td align="left">7b</td>
 <td align="center">5/13/20</td>
-<td align="left">Penalized regression</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left"><a href="https://bradleyboehmke.github.io/HOML/regularized-regression.html">HML: Ch. 6</a></td>
-</tr>
-<tr class="even">
-<td align="center">3b</td>
-<td align="center">5/15/20</td>
-<td align="left">Lab: Ridge, Lasso, &amp; Elastic net</td>
-<td align="left">Lab 2</td>
-<td align="left">Lab 1</td>
-<td align="left"></td>
+<td align="center">Daniel</td>
+<td align="center">Bagged trees</td>
+<td align="center"></td>
+<td align="center">?Lab 5</td>
+<td align="center">Lab 4</td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td align="center">4a</td>
+<td align="left">8a</td>
+<td align="center">5/18/20</td>
+<td align="center">Joe</td>
+<td align="center">Random forests</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">HML: Ch. 10, 11</td>
+</tr>
+<tr class="even">
+<td align="left">8b</td>
 <td align="center">5/20/20</td>
-<td align="left">k-nearest neighbor &amp; MARS</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left"><a href="https://bradleyboehmke.github.io/HOML/knn.html">HML: Ch. 8</a></td>
-</tr>
-<tr class="even">
-<td align="center">4b</td>
-<td align="center">5/22/20</td>
-<td align="left">Lab</td>
-<td align="left">Lab 3</td>
-<td align="left">Lab 2</td>
-<td align="left"><a href="https://bradleyboehmke.github.io/HOML/mars.html">HML: Ch. 7</a></td>
+<td align="center">Joe</td>
+<td align="center">Lab</td>
+<td align="center"></td>
+<td align="center">Lab 6</td>
+<td align="center">Lab 5<br/>Prelim fits 2</td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td align="center">5a</td>
+<td align="left">9a</td>
+<td align="center">5/25/20</td>
+<td align="center">Daniel</td>
+<td align="center">Boosted trees</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">HML Ch. 12</td>
+</tr>
+<tr class="even">
+<td align="left">9b</td>
 <td align="center">5/27/20</td>
-<td align="left">Feature engineering</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left"><a href="http://www.feat.engineering/intro-intro.html">FE: Ch. 1</a></td>
-</tr>
-<tr class="even">
-<td align="center">5b</td>
-<td align="center">5/29/20</td>
-<td align="left">Dimension Reduction</td>
-<td align="left"></td>
-<td align="left">Lab 3<br/>Prelim fits 1</td>
-<td align="left"><a href="https://bradleyboehmke.github.io/HOML/pca.html">HML: Ch. 17</a></td>
+<td align="center"></td>
+<td align="center">Work Day</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">Lab 6</td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td align="center">6a</td>
-<td align="center">6/4/20</td>
-<td align="left">Model performance</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">APM: Ch. 5<br/>APM: Ch. 11</td>
+<td align="left">10a</td>
+<td align="center">6/1/20</td>
+<td align="center">Daniel</td>
+<td align="center">Advanced topics in ML</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="even">
-<td align="center">6b</td>
-<td align="center">6/6/20</td>
-<td align="left">Lab: Measuring performance</td>
-<td align="left">Lab 4</td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="left">10b</td>
+<td align="center">6/3/20</td>
+<td align="center">Guest Lecture: Sondra Stegenga</td>
+<td align="center">ML Ethics</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">Floridi &amp; Taddeo (2016)</td>
 </tr>
 <tr class="odd">
-<td align="center">7a</td>
-<td align="center">6/11/20</td>
-<td align="left">Decision trees</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left"><a href="https://bradleyboehmke.github.io/HOML/DT.html">HML: Ch. 9</a></td>
-</tr>
-<tr class="even">
-<td align="center">7b</td>
-<td align="center">6/13/20</td>
-<td align="left">Lab</td>
-<td align="left">Lab 5</td>
-<td align="left">Lab 4</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="center">8a</td>
-<td align="center">6/18/20</td>
-<td align="left">Bagged trees <br/>Random forests</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left"><a href="https://bradleyboehmke.github.io/HOML/bagging.html">HML: Ch. 10</a>, <a href="https://bradleyboehmke.github.io/HOML/random-forest.html">11</a></td>
-</tr>
-<tr class="even">
-<td align="center">8b</td>
-<td align="center">6/20/20</td>
-<td align="left">Lab</td>
-<td align="left">Lab 6</td>
-<td align="left">Lab 5<br/>Prelim fits 2</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="center">9a</td>
-<td align="center">6/25/20</td>
-<td align="left">Boosted trees</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left"><a href="https://bradleyboehmke.github.io/HOML/gbm.html">HML Ch. 12</a></td>
-</tr>
-<tr class="even">
-<td align="center">9b</td>
-<td align="center">6/27/20</td>
-<td align="left">Work Day</td>
-<td align="left"></td>
-<td align="left">Lab 6</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="center">10a</td>
-<td align="center">7/1/20</td>
-<td align="left">ML Ethics</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left"><a href="https://royalsocietypublishing.org/doi/full/10.1098/rsta.2016.0360">Floridi &amp; Taddeo (2016)</a></td>
-</tr>
-<tr class="even">
-<td align="center">10b</td>
-<td align="center">7/3/20</td>
-<td align="left">HPC &amp; Advanced topics in ML</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="center">Finals Week</td>
-<td align="center">7/8/20 - 7/12/20</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">Final Project</td>
-<td align="left"></td>
+<td align="left">Finals Week</td>
+<td align="center">6/10/20</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">Final Project</td>
+<td align="center"></td>
 </tr>
 </tbody>
 </table>
