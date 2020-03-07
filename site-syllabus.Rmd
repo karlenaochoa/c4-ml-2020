@@ -36,7 +36,6 @@ By the end of this course students will be able to
 * Construct models for both classification- and regression-based problems. 
 * Conduct feature engineering, including dimension reduction, to increase model performance (and quantify the degree to which model performance changed).
 
-<!-- START HERE -->
 
 # Course Readings 
 All course readings are freely available online or will be provided by the
@@ -70,34 +69,41 @@ Your final grade will be composed of three components:
 
 Note - up to 5 points extra credit will be awarded to the team providing the most performant model
 
+## Attendance (20 points)
+A critical component of learning data science includes receiving structured feedback as you problem-solve coding and data issues. Each lab will be introduced and begun in class, so that as a group we can talk through the task at hand. Supporting your classmates is also important, and so attendance during final presentations is mandatory.
+
 ## Labs (30 points; 15%)
 There are 6 labs during the course. All labs will be scored on a “best honest effort” basis, which generally implies zero or full credit (i.e., the assignment was or was not fully completed). However, labs may require students complete specific portions before moving on to the next sections. If you find yourself stuck and unable to proceed, **please contact the instructor for help rather than submitting incomplete work**. Contacting the instructor is part of the “best honest effort”, and can result in full credit for an assignment even if the work is not fully complete. **If the assignment is not complete, and the student has not contacted the instructor for help or visited office hours, it is likely to result is a partial credit score or a zero**. Labs submitted late will be docked by 30% (3 points).
 
 ## Final Project (120 points; 60%)
 The final project in this class is a group project to develop a predictive model for unseen data, along with a blog post describing your methods, including a description of the data used and the analysis procedure, along with an analysis of model performance and description of why you chose the model you did.
 
-You will receive data from the instructor by Week 2 of the term. These data are likely to be divided amongst multiple files. As a team, you will need to work together to link the data you choose to use in your model (you do not need to use all the data), build, tune, and evaluate a predictive model. You will receive both training and testing data. The testing data will include all the same data as the training data, but without the outcome. You will therefore use the training data to build a supervised learning model and make predictions on the testing data. However, you will not be able to make evaluations on the testing data – these will be submitted to the instructor who will provide you feedback on the accuracy of your model. This is equivalent to the format of online data science competitions (e.g., [kaggle](https://www.kaggle.com)). Unlike online data science competitions, however, we will not have a public leaderboard.
+We will be using the [kaggle](https://www.kaggle.com) platform to host a local competition. You will receive a link to our class competition page the first week of class. As a team, you will need to work together to build a predictive model. You may link the data to outside data to help increase the performance of your model (e.g., [NCES](https://nces.ed.gov)). You will have access to the training dataset, which you will use to build, tune, and evaluate a predictive model. Once you have settled on a model, you will make predictions on a separate set of data that has all the same features (variables) except the outcome. You will then upload these predictions to kaggle, which will provide you with an estimate of your model accuracy on a portion of the test dataset (but not the full test data). Finally, at the end of the course, each team's most performant model will be evaluated against the full test data (note that this final test regularly leads to changes in the leader board ranking for real kaggle competitions). The team with the best model will be awarded five points extra credit.
 
 ### Preliminary fits (20 points; 10%)
-At the end of Week 5 and Week 8 each team will be required to submit preliminary predictions. Each team will be allowed to submit one set of predictions for the model they think will be most performant. The instructor will provide general feedback in terms of whether they model is near the bottom, in the middle, or near the top of all models submitted in terms of model performance. A quantitative indicator of prediction accuracy will also be provided. Submissions will be scored on an “all or nothing” basis at 10 points each. In other words, if your group provides a set of predictions, you will all receive credit, regardless of the performance of the model. 
+At the end of Week 5 and Week 8 each team will be required to submit preliminary predictions. Note, you may submit predictions at any time, but you must submit your first predictions by Week 5, and predictions from a new model by Week 8. A quantitative indicator of prediction accuracy will automatically be provided. Submissions will be scored on an “all or nothing” basis at 10 points each. In other words, if your group provides a set of predictions, you will all receive credit, regardless of the performance of the model. 
 
-### Blog post (100 points; 50%)
-The primary means by which you will be evaluated on the final project will be through a blog post. It is assumed that all students are comfortable creating blog posts, given the content covered in previous courses (specifically EDLD 652). Share relevant code within the blog post to better describe your approach. The components and scoring of the blog post are as follows:
+### Blog post(s) (100 points; 50%)
+The primary means by which you will be evaluated on the final project will be through a blog post, or set of blog posts. It is assumed that all students are comfortable creating blog posts, given the content covered in previous courses (specifically EDLD 652). Share relevant code within the blog post(s) to better describe your approach. The components and scoring of the blog post(s) are as follows:
 
 #### Description of the data (30 points; 15%)
-As mentioned, you will obtain data spread across a number of files, and not all data are required to be used in the creation of your model. You must describe what data you used, how you linked the datasets, and any external data sources you incorporated (if any). The description should be sufficiently clear that the instructor understands all the variables that were included, and how the dataset was constructed, without actually viewing your code. While specific code snippets can be included in this section to add clarity, the reader should not have to rely on this code to understand the data preparation. Provide a summary of the variables (e.g., how many categorical/continuous variables were included, what were the range of values, etc.), and any feature engineering applied to the data. If missing data are present, discuss how these values were handled. Use this section to explain your data splitting process for model evaluation. 
+While all teams will work with the same data, the procedures you use with the data are likely to be different than those used by other teams. Describe core features of the data, any additional data you joined in and why, and basic descriptives. Note that this may be a relevant blog post on its own, or a major section within a single blog post.
+
+The description should be sufficiently clear that the instructor understands all the variables that were included in your modeling, and how the final analytic dataset was constructed, without actually viewing your code. While specific code snippets can be included in this section to add clarity, the reader should not have to rely on this code to understand the data preparation. 
+
+Provide a summary of the variables (e.g., how many categorical/continuous variables were included, what were the range of values, etc.), and any feature engineering applied to the data. If missing data are present, discuss how these values were handled, variable transformations, etc. Use this section to explain your data splitting process for model evaluation. 
 
 #### Description of the models fit (30 points; 15%)
-At least three models must be fit to the data. Describe each model fit, why the given model was selected, tuning parameters to be optimized, assumptions of the model, and a high-level (think broad audience) description of what the model is doing and why it is appropriate (even as an initial starting point). Discuss how you will evaluate model performance.
+At least three models must be fit to the data. Describe each model fit, why the given model was selected, hyperparameters to be optimized, assumptions of the model, and a high-level (think broad audience) description of what the model is doing and why it is appropriate (even as an initial starting point). Discuss how you will evaluate model performance.
 
 #### Model fits (20 points; 10%)
-Describe your model fitting procedure and the results of your model evaluation. Compare and contrast the different fits, including a discussion of model performance. Share code to communicate your procedures, and discuss your final model selection and the evidence that led you to this selection.
+Describe your model fitting procedure(s) and the results of your model evaluation. Compare and contrast the different fits, including a discussion of model performance. Share code to communicate your procedures, and discuss your final model selection and the evidence that led you to this selection.
 
 #### Data visualization (10 points; 5%)
 Include at least two plots (you may include more) to help communicate your findings. The plots may be of initial data explorations, fits of individual models, and/or plots displaying competing model performance. 
 
 #### Reproducibility (10 points; 5%)
-All code should be housed in an online repository utilizing version control and be fully reproducible. The only exception is if the data are sufficiently large that they cannot be stored in the repository because of site restrictions. In that case, please make an empty “data” folder with a README file describing how interested parties can access the data.
+All code should be housed in a GitHub repository  and be fully reproducible. The only exception is if external data were used that are sufficiently large that they cannot be stored in the repository (without utilizing LFS). In that case, please make an empty “data” folder with a README file describing how interested parties can access the data. If possible, include a script that downloads the file and places it in the correct directory.
 
 #### Extra credit (5 points)
 Up to five points extra credit will be awarded to the team providing the most performant model. If there are ties amongst teams, extra credit will be awarded at the discretion of the instructor.
@@ -157,6 +163,18 @@ The University of Oregon is located on Kalapuya Ilihi, the traditional indigenou
 
 ## Using Pronouns and Personal Preference
 The College of Education is always working to include and engage everyone. One way we can do this is to share our pronouns, or the words we want to be called when people aren’t using our name. Like names, pronouns are an important part of how we identify ourselves. Because we recognize that assuming someone’s gender can be hurtful, especially to members of our community who are transgender, genderqueer, or non-binary. This practice can assist in promoting respectful communication. As a community, we are all learning together about the importance of pronouns and being better allies to the trans community on campus. If you would like to ensure clarity around pronouns, please feel free to share any pronouns you would prefer me to use when referring to you to help me be aware of how to address you respectfully. Please visit this university website for more information. https://studentlife.uoregon.edu/pronouns
+
+## Children in class
+
+I applaud all of you who go to graduate school with children! I had both of my girls while a doctoral student, and I understand the difficulty in balancing academic, work, and family commitments. I want you to succeed. Here are my policies regarding children in class:
+
+1. All breastfeeding babies are welcome in class as often as necessary.
+2. Non-nursing babies and older children are welcome whenever alternate arrangements cannot be made. As a parent of two young children, I understand that babysitters fall through, partners have conflicting schedules, children get sick, and other issues arise that leave parents with few other options.
+3. In cases where children come to class, I invite parents/caregivers to sit close to the door so as to more easily excuse yourself to attend to your child's needs. Non-parents in the class: please reserve seats near the door for your parenting classmates.
+4. All students are expected to join with me in creating a welcoming environment that is respectful of your classmates who bring children to class.
+
+I understand that sleep deprivation and exhaustion are among the most difficult aspects of parenting young children. The struggle of balancing school, work, childcare, and graduate school is tiring, and I will do my best to accommodate any such issues while maintaining the same high expectations for all students enrolled in the class. ***Please do not hesitate to contact me with any questions or concerns.***
+
 
 ## Documented Disability
 Appropriate accommodations will be provided for students with documented disabilities. If you have a documented disability and require accommodation, arrange to meet with the course instructor within the first two weeks of the term. The documentation of your disability must come in writing from the Accessible Education Center in the Office of Academic Advising and Student Services.  Disabilities may include (but are not limited to) neurological impairment, orthopedic impairment, traumatic brain injury, visual impairment, chronic medical conditions, emotional/psychological disabilities, hearing impairment, and learning disabilities. For more information on Accessible Education Center, please see http://aec.uoregon.edu 
