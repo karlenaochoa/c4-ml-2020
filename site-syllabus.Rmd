@@ -6,30 +6,29 @@ output:
     toc_float: true
 ---
 
-## EDLD 610: Applied Machine Learning for Educational Data Scientists (CRN: XXXXX; 3 credit hours)
+## EDLD 610: Applied Machine Learning for Educational Data Scientists (CRN: 37108; 3 credit hours)
 * **Term:** Spring 2020
-* **Time:** 
-* **Classroom:** Lokey 115
+* **Time:** 12:00 - 1:20
+* **Classroom:** Lokey Education 176
 * **Instructors:** 
-	+ Daniel Anderson, PhD
-		- *email:* (preferred contact method) [daniela@uoregon.edu](mailto:daniela@uoregon.edu)
-		- *phone:* 541-346-3317
-		- *office:* 175 Lokey
-		- *office hours*: By appointment
-		- *pronouns:* he/him/his
 	* Joseph Nese, PhD
 		- *email:* (preferred contact method) [jnese@uoregon.edu](mailto:jnese@uoregon.edu)
 		- *phone:* 541-346-2174
 		- *office:* 175 Lokey
 		- *office hours*: By appointment
 		- *pronouns:* he/him/his
+	+ Daniel Anderson, PhD
+		- *email:* (preferred contact method) [daniela@uoregon.edu](mailto:daniela@uoregon.edu)
+		- *phone:* 541-346-3317
+		- *office:* 175 Lokey
+		- *office hours*: By appointment
+		- *pronouns:* he/him/his
 
 # Course Overview
-This is the fourth course in a sequence of courses on educational data science (EDS), taught using the free and open-source statistical programming language [R](https://cran.r-project.org). This course focuses on applied machine learning (ML), with an emphasis on supervised learning methods that have emerged over the last several decades. The primary goal of these methods is to create models capable of making accurate predictions, which generally implies less emphasis on statistical inference.
+This is the fourth course in a sequence of courses on educational data science (EDS), taught using free and open-source statistical programming languages. This course focuses on applied machine learning (ML), with an emphasis on supervised learning methods that have emerged over the last several decades. The primary goal of these methods is to create models capable of making accurate predictions, which generally implies less emphasis on statistical inference.
 
 ## Student Learning objectives
-By the end of this course, students should be able to:
-
+By the end of this course students will be able to
 * Describe the framework of machine learning (i.e. supervised vs. unsupervised learning) and how it differs from standard inferential statistics.
 * Discuss the bias-variance tradeoff in supervised learning and apply the concept in making decisions about model selection.
 * Construct various supervised learning models, including linear regression (for prediction rather than inference), penalized regression (ridge/lasso), various decision tree models (including bagged and boosted trees, and random forests), and k-nearest neighbor models.
@@ -37,6 +36,7 @@ By the end of this course, students should be able to:
 * Construct models for both classification- and regression-based problems. 
 * Conduct feature engineering, including dimension reduction, to increase model performance (and quantify the degree to which model performance changed).
 
+<!-- START HERE -->
 
 # Course Readings 
 All course readings are freely available online or will be provided by the
