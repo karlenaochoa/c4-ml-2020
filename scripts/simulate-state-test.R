@@ -1,7 +1,7 @@
 library(tidyverse)
 
 d <- read_csv(here::here("data", "raw-data", "math1718.csv"))
-
+names(d)
 # d %>% 
 #   count(is.na(rit_tot))
 
@@ -45,19 +45,19 @@ d %>%
 # fix it up for final output
 ## redo cut scores
 maxes <- d %>% 
-  group_by(tst_bnch, pl5g_tot) %>% 
+  group_by(tst_bnch, pl5b_tot) %>% 
   summarize(cut = max(rit_tot)) %>% 
-  filter(pl5g_tot < 4) %>% 
-  filter(!(grepl("^X", tst_bnch) & pl5g_tot == 2))
-
+  filter(pl5b_tot < 4) #%>% 
+ # filter(!(grepl("^X", tst_bnch) & pl5b_tot == 2)) 
+  
 classify <- function(score, cuts) {
-  if(length(cuts) == 1) {
-    if(score <= cuts) { 
-      out <- 1
-    } else {
-      out <- 2 
-    }
-  }
+  # if(length(cuts) == 1) {
+  #   if(score <= cuts) { 
+  #     out <- 1
+  #   } else {
+  #     out <- 2 
+  #   }
+  # }
 
   if(length(cuts) > 1) {
     if(score <= cuts[1]) { 
@@ -82,17 +82,40 @@ cuts <- maxes %>%
 d <- left_join(d, cuts) %>% 
   mutate(score = round(score),
          classification = map2_dbl(score, cuts, classify))
+
 d %>% 
-  count(srt_tst_typ, pl5g_tot, classification) %>% 
+  count(srt_tst_typ, pl5b_tot, classification) %>% 
   filter(srt_tst_typ == "T") %>% 
-  ggplot(aes(classification, pl5g_tot)) +
+  ggplot(aes(classification, pl5b_tot)) +
   geom_tile(aes(fill = n)) +
   colorspace::scale_fill_continuous_diverging(palette = "Blue-Red 3") +
   theme_minimal()
 
+
+
+geo <- read_csv("https://raw.githubusercontent.com/datalorax/ach-gap-variability/master/data/achievement-gaps-geocoded.csv") %>% 
+  as_tibble() %>% 
+  filter(year == "1718",
+         state == "OR")
+  
+geo <- geo %>% 
+  select(district_id, school_id, ncessch, lat, lon) %>% 
+  mutate(school_id = as.numeric(str_remove(school_id, "^0+"))) %>% 
+  distinct(.keep_all = TRUE)
+
+
+d_geo <- d %>% 
+  left_join(geo, by = c(attnd_dist_inst_id = "district_id", attnd_schl_inst_id = "school_id"))
+  
+
 # write out file
-d %>% 
+d_geo %>% 
   rowid_to_column("id") %>% 
-  select(-rit_tot, -cuts, -pl5g_tot) %>% 
+  select(-rit_tot, -cuts, -pl5b_tot) %>% 
   select(id:tst_valid_fg, score, sem_tot, classification, everything()) %>% 
   write_csv(here::here("data", "state-test-simulated.csv"))
+
+
+
+
+
