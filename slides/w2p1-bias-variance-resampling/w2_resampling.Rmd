@@ -1,0 +1,119 @@
+---
+title: "w2"
+author: "Joe Nese"
+date: "3/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(rio)
+library(here)
+library(tidyverse)
+library(tidymodels)
+library(ggthemes)
+
+theme_set(theme_minimal())
+```
+
+```{r}
+
+math_split <- initial_split(math)
+
+math_train <- training(math_split)
+math_test  <- testing(math_split)
+
+```
+
+```{r}
+
+math <- import(here::here("data", "state-test-simulated.csv")) %>% 
+  as_tibble()
+
+set.seed(210)
+(math_split <- initial_split(math))
+
+math_split %>% training() %>% nrow() / nrow(math)
+
+names(math_split)
+
+class(math_split)
+
+```
+
+
+```{r}
+
+set.seed(210)
+(math_split70 <- initial_split(math, prop = .70))
+
+math_split70 %>% training() %>% nrow() / nrow(math)
+
+```
+
+
+```{r}
+
+set.seed(210)
+(cv_splits <- vfold_cv(math_train, strata = "srt_tst_typ"))
+```
+
+```{r}
+
+cv_splits$splits[[1]]
+
+cv_splits$splits[[1]] %>% 
+  analysis() %>%
+  nrow()
+
+cv_splits$splits[[1]] %>% 
+  assessment() %>%
+  nrow()
+
+```
+
+```{r}
+
+set.seed(210)
+(mc_splits <- mc_cv(math_train))
+
+nrow(math_train)
+
+mc_splits$splits[[1]]
+
+mc_splits$splits[[12]]
+
+mc_splits$splits[[25]]
+
+analysis(mc_splits$splits[[1]]) %>% nrow() / nrow(mc_splits$splits[[1]]$data)
+
+```
+
+```{r}
+
+(boot_splits <- bootstraps(math_train))
+
+nrow(math_train)
+
+boot_splits$splits[[1]]
+
+boot_splits$splits[[12]]
+
+boot_splits$splits[[25]]
+
+```
+
+```{r}
+
+set.seed(210)
+(loo_splits <- loo_cv(sample_n(math_train, 10000)))
+
+loo_splits$splits[[1]]
+loo_splits$splits[[12]]
+loo_splits$splits[[101]]
+
+
+
+```
+
