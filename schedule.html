@@ -336,7 +336,7 @@ $(document).ready(function () {
 <td align="center">Joe</td>
 <td align="center">Intro to course<br/>Installing software</td>
 <td align="center"></td>
-<td align="center">Final <br/>Get to know data?</td>
+<td align="center">Final <br/>Get to know data</td>
 <td align="center"></td>
 <td align="center">HML Ch. 1</td>
 </tr>
@@ -344,7 +344,7 @@ $(document).ready(function () {
 <td align="left">1b</td>
 <td align="center">4/1/20</td>
 <td align="center">Daniel</td>
-<td align="center">Inference vs. Prediction<br/>Estimating f<br/>Regression vs Classification</td>
+<td align="center"><a href="slides/w1p2-inf-v-pred.html">Inference vs. Prediction<br/>Estimating <span class="math inline">\(f\)</span><br/>Regression vs Classification</a></td>
 <td align="center"></td>
 <td align="center"></td>
 <td align="center"></td>
@@ -355,7 +355,7 @@ $(document).ready(function () {
 <td align="center">4/6/20</td>
 <td align="center">Joe</td>
 <td align="center">Bias-variance tradeoff<br/>test set<br/>k-fold CV (&amp; repeats)</td>
-<td align="center"><code>initial_split</code><br/><code>train()</code><br/><code>test()</code><br/><code>vfold_cv</code></td>
+<td align="center"><code>initial_split</code><br/><code>train()</code><br/><code>test()</code><br/><code>vfold_cv()</code> &amp; others</td>
 <td align="center"></td>
 <td align="center"></td>
 <td align="center">ISLR: Ch. 2.2<br/>ISLR: Ch 5.1</td>
@@ -364,7 +364,7 @@ $(document).ready(function () {
 <td align="left">2b</td>
 <td align="center">4/8/20</td>
 <td align="center">Joe</td>
-<td align="center"><em>Lab: k-fold CV (use purrr to mutate column; to understand k-fold process)</em></td>
+<td align="center">Lab 1: <br/>Resampling</td>
 <td align="center"></td>
 <td align="center">Lab 1</td>
 <td align="center"></td>
@@ -377,16 +377,16 @@ $(document).ready(function () {
 <td align="center">Variable Selection &amp; <br/>Model performance</td>
 <td align="center">Choose “model function”<br/><code>set_engine()</code><br/><code>set_mode()</code><br/><code>fit_resamples()</code><br/><code>collect_metrics()</code><br/><code>select_best()</code></td>
 <td align="center"></td>
-<td align="center"></td>
+<td align="center">Lab 1</td>
 <td align="center">HML: Ch. 6<br/>APM: Ch. 5<br/>APM: Ch. 11</td>
 </tr>
 <tr class="even">
 <td align="left">3b</td>
 <td align="center">4/15/20</td>
 <td align="center">Daniel</td>
-<td align="center">Lab: Building a predictive lm and Measuring performance</td>
+<td align="center">Lab 2: <br/>Building a predictive lm and Measuring performance</td>
 <td align="center"></td>
-<td align="center"></td>
+<td align="center">Lab 2</td>
 <td align="center"></td>
 <td align="center"></td>
 </tr>
@@ -394,19 +394,19 @@ $(document).ready(function () {
 <td align="left">4a</td>
 <td align="center">4/20/20</td>
 <td align="center">Joe</td>
-<td align="center">Extensions of lm: Ridge, Lasso, Elastic net</td>
-<td align="center">New arguments to <code>linear_reg()</code><br/><code>tune_grid()</code><br/><code>show_best()</code></td>
+<td align="center">Extending lm: Ridge, Lasso, Elastic net</td>
+<td align="center">New arguments to <code>linear_reg()</code><br/><code>metric_set()</code><br/><code>tune_grid()</code><br/><code>grid_regular()</code><br/><code>show_best()</code></td>
+<td align="center"></td>
 <td align="center">Lab 2</td>
-<td align="center">Lab 1</td>
 <td align="center"></td>
 </tr>
 <tr class="even">
 <td align="left">4b</td>
 <td align="center">4/22/20</td>
 <td align="center">Joe</td>
-<td align="center">LAB:<br/>Penalized Regression</td>
+<td align="center">Lab 3:<br/>Penalized Regression</td>
 <td align="center"></td>
-<td align="center"></td>
+<td align="center">Lab 3</td>
 <td align="center"></td>
 <td align="center"></td>
 </tr>
@@ -417,36 +417,36 @@ $(document).ready(function () {
 <td align="center">Feature engineering</td>
 <td align="center"><a href="https://tidymodels.github.io/recipes/">{recipes}</a></td>
 <td align="center"></td>
-<td align="center"></td>
+<td align="center">Lab 3</td>
 <td align="center"></td>
 </tr>
 <tr class="even">
 <td align="left">5b</td>
 <td align="center">4/29/20</td>
 <td align="center">Daniel</td>
-<td align="center">LAB: <br/>Feature Engineering (Dimension Reduction)</td>
+<td align="center">Lab 4: <br/>Feature Engineering (Dimension Reduction)</td>
 <td align="center"></td>
-<td align="center"></td>
-<td align="center"></td>
+<td align="center">Lab 4</td>
+<td align="center">Preliminary Fit 1</td>
 <td align="center"></td>
 </tr>
 <tr class="odd">
 <td align="left">6a</td>
 <td align="center">5/4/20</td>
 <td align="center">Joe</td>
-<td align="center"><em>k-nearest neighbor</em></td>
+<td align="center"><em>K</em>-nearest neighbor</td>
+<td align="center"><code>nearest_neighbor()</code><br/><code>grid_max_entropy()</code><br/><code>autoplot()</code></td>
 <td align="center"></td>
-<td align="center"></td>
-<td align="center"></td>
+<td align="center">Lab 4</td>
 <td align="center">HML: Ch. 8</td>
 </tr>
 <tr class="even">
 <td align="left">6b</td>
 <td align="center">5/6/20</td>
 <td align="center">Joe</td>
-<td align="center">Lab</td>
-<td align="center"><code>expand.grid()</code> OR tidymodel version for neighbors arg<br/>tune pca components</td>
+<td align="center">Lab 5: <br/> <em>K</em>NN</td>
 <td align="center"></td>
+<td align="center">Lab 5</td>
 <td align="center"></td>
 <td align="center">FE: Ch. 1<br/>HML: Ch. 17</td>
 </tr>
@@ -457,7 +457,7 @@ $(document).ready(function () {
 <td align="center">Decision trees</td>
 <td align="center"></td>
 <td align="center"></td>
-<td align="center"></td>
+<td align="center">Lab 5</td>
 <td align="center">HML: Ch. 9</td>
 </tr>
 <tr class="even">
@@ -466,8 +466,8 @@ $(document).ready(function () {
 <td align="center">Daniel</td>
 <td align="center">Bagged trees</td>
 <td align="center"></td>
-<td align="center">?Lab 5</td>
-<td align="center">Lab 4</td>
+<td align="center"></td>
+<td align="center"></td>
 <td align="center"></td>
 </tr>
 <tr class="odd">
@@ -484,10 +484,10 @@ $(document).ready(function () {
 <td align="left">8b</td>
 <td align="center">5/20/20</td>
 <td align="center">Joe</td>
-<td align="center">Lab</td>
+<td align="center">Lab 6: <br/> Ensemble Methods</td>
 <td align="center"></td>
 <td align="center">Lab 6</td>
-<td align="center">Lab 5<br/>Prelim fits 2</td>
+<td align="center">Preliminary Fit 2</td>
 <td align="center"></td>
 </tr>
 <tr class="odd">
@@ -497,7 +497,7 @@ $(document).ready(function () {
 <td align="center">Boosted trees</td>
 <td align="center"></td>
 <td align="center"></td>
-<td align="center"></td>
+<td align="center">Lab 6</td>
 <td align="center">HML Ch. 12</td>
 </tr>
 <tr class="even">
@@ -507,7 +507,7 @@ $(document).ready(function () {
 <td align="center">Work Day</td>
 <td align="center"></td>
 <td align="center"></td>
-<td align="center">Lab 6</td>
+<td align="center"></td>
 <td align="center"></td>
 </tr>
 <tr class="odd">
