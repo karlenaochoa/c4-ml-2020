@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Variable selection and model performance</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Daniel Anderson" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/uo.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/uo-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/hygge.css" rel="stylesheet" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Variable selection and model performance
+## A walktrhough
+### Daniel Anderson
+### Week 3, Class 1
+
+---
+
+
+
+
+# Agenda
+
+---
+# Scenario
+* Imagine you have a dataset with a lot of variables
+
+* You don't know much about what relates to the outcomes
+
+
+--
+* .bolder[.b[GOAL]]: Figure out the most important subset of variables that relate to the outcome
+
+
+---
+# Workflow
+* Split the dataset into train/test sets
+
+
+--
+* Prepare the dataset for `\(k\)`-fold cross validation
+
+
+--
+* Determine the type of model you will fit, and the problem type (regression or classification)
+
+
+--
+* Compare different models against the chosen objective funtion through `\(k\)`-fold CV
+
+
+--
+* Settle on a final model, and evaluate it against the test dataset
+
+
+---
+# Load the data
+* Please follow along!
+
+
+```r
+library(tidyverse)
+library(tidymodels)
+d &lt;- read_csv(here::here("data", "edld-654-final-project", "train.csv"))
+head(d)
+```
+
+```
+## # A tibble: 6 x 41
+##      id gndr  ethnic_cd attnd_dist_inst_id attnd_schl_inst_id enrl_grd
+##   &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;                  &lt;dbl&gt;              &lt;dbl&gt;    &lt;dbl&gt;
+## 1     1 F     H                       2142               1330        6
+## 2     3 F     W                       2180                857        8
+## 3     6 M     W                       2082                524        8
+## 4     8 M     H                       2048                422        8
+## 5     9 F     H                       1964                191        8
+## 6    10 F     W                       2083                557        8
+## # … with 35 more variables: calc_admn_cd &lt;chr&gt;, tst_bnch &lt;chr&gt;,
+## #   tst_valid_fg &lt;chr&gt;, score &lt;dbl&gt;, sem_tot &lt;dbl&gt;, classification &lt;dbl&gt;,
+## #   tst_dt &lt;chr&gt;, migrant_ed_fg &lt;chr&gt;, ind_ed_fg &lt;chr&gt;, sp_ed_fg &lt;chr&gt;,
+## #   tag_ed_fg &lt;chr&gt;, econ_dsvntg &lt;chr&gt;, ayp_lep &lt;chr&gt;, stay_in_dist &lt;chr&gt;,
+## #   stay_in_schl &lt;chr&gt;, dist_sped &lt;chr&gt;, trgt_assist_fg &lt;chr&gt;, acdm_yr &lt;dbl&gt;,
+## #   ayp_dist_partic &lt;chr&gt;, ayp_schl_partic &lt;chr&gt;, ayp_dist_prfrm &lt;chr&gt;,
+## #   ayp_schl_prfrm &lt;chr&gt;, rc_dist_partic &lt;chr&gt;, rc_schl_partic &lt;chr&gt;,
+## #   rc_dist_prfrm &lt;chr&gt;, rc_schl_prfrm &lt;chr&gt;, partic_dist_inst_id &lt;dbl&gt;,
+## #   partic_schl_inst_id &lt;dbl&gt;, srt_tst_typ &lt;chr&gt;, lang_cd &lt;chr&gt;,
+## #   tst_atmpt_fg &lt;chr&gt;, grp_rpt_dist_partic &lt;chr&gt;, grp_rpt_schl_partic &lt;chr&gt;,
+## #   grp_rpt_dist_prfrm &lt;chr&gt;, grp_rpt_schl_prfrm &lt;chr&gt;
+```
+
+---
+class: inverse center middle
+# House cleaning
+
+---
+# Select variables for inclusion
+* We don't want to include everything right now (too messy)
+* Limit to the following:
+
+```r
+d &lt;- d %&gt;% 
+  select(id, gndr, ethnic_cd, enrl_grd, migrant_ed_fg, 
+         ind_ed_fg, sp_ed_fg, tag_ed_fg, econ_dsvntg, 
+         srt_tst_typ, score) 
+```
+
+* Let's also make things really easy on ourselves, and remove all missing data.
+
+
+```r
+d &lt;- d %&gt;% 
+  drop_na()
+```
+
+---
+# Prep data for analysis
+
+We'll talk more about this later, but for now, we need to use [{recipes}](https://tidymodels.github.io/recipes/) at least a small amount so we can dummy code our categorical variables.
+
+
+```r
+d &lt;- recipe(score ~ ., data = d) %&gt;% 
+  update_role(id, new_role = "id variable") %&gt;% 
+  step_string2factor(all_nominal()) %&gt;% 
+  step_dummy(all_nominal()) %&gt;% 
+  prep() %&gt;% 
+  juice()
+
+d
+```
+
+```
+## # A tibble: 191,236 x 17
+##       id enrl_grd score gndr_M ethnic_cd_B ethnic_cd_H ethnic_cd_I ethnic_cd_M
+##    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;
+##  1     1        6  2340      0           0           1           0           0
+##  2     3        8   204      0           0           0           0           0
+##  3     6        8  2694      1           0           0           0           0
+##  4     8        8  2493      1           0           1           0           0
+##  5     9        8  2435      0           0           1           0           0
+##  6    10        8  2700      0           0           0           0           0
+##  7    12        8  2623      1           0           1           0           0
+##  8    13        8  2488      0           0           1           0           0
+##  9    14        8  2461      0           0           0           0           0
+## 10    15        8  2246      1           0           0           0           0
+## # … with 191,226 more rows, and 9 more variables: ethnic_cd_P &lt;dbl&gt;,
+## #   ethnic_cd_W &lt;dbl&gt;, migrant_ed_fg_Y &lt;dbl&gt;, ind_ed_fg_y &lt;dbl&gt;,
+## #   ind_ed_fg_Y &lt;dbl&gt;, sp_ed_fg_Y &lt;dbl&gt;, tag_ed_fg_Y &lt;dbl&gt;,
+## #   econ_dsvntg_Y &lt;dbl&gt;, srt_tst_typ_X &lt;dbl&gt;
+```
+
+---
+# Split the data
+Note that this is already our "training" data, but we have to treat it like our full data (we don't have labels for the "test" data).
+
+--
+
+* Set a seed
+
+
+--
+* Create an initial split
+  + Consider any stratification variables
+  + Consdider what proportion you want in test/training
+
+
+--
+* Pull the training data j
+  + You could pull the test data too, but I usually wait until I get to the evaluation period.
+
+--
+
+```r
+set.seed(8675309)
+splt &lt;- initial_split(d, strata = srt_tst_typ_X)
+train &lt;- training(splt)
+```
+
+---
+# Check our stratification
+
+.pull-left[
+
+```r
+d %&gt;% 
+  count(srt_tst_typ_X) %&gt;% 
+  mutate(prop = n/sum(n))
+```
+
+```
+## # A tibble: 2 x 3
+##   srt_tst_typ_X      n       prop
+##           &lt;dbl&gt;  &lt;int&gt;      &lt;dbl&gt;
+## 1             0 188889 0.9877272 
+## 2             1   2347 0.01227279
+```
+]
+
+.pull-right[
+
+```r
+train %&gt;% 
+  count(srt_tst_typ_X) %&gt;% 
+  mutate(prop = n/sum(n))
+```
+
+```
+## # A tibble: 2 x 3
+##   srt_tst_typ_X      n       prop
+##           &lt;dbl&gt;  &lt;int&gt;      &lt;dbl&gt;
+## 1             0 141665 0.9877150 
+## 2             1   1762 0.01228500
+```
+]
+
+---
+# Create `\(k\)`-folds
+
+* For now, we'll just use the default 10 splits - note this may not *always* work best
+
+
+--
+* High variance betweeen folds? Consider repeated `\(k\)`-fold CV. (not the same thing as increasing number of folds)
+
+
+--
+* How big is your sample? Really large - probably don't need to worry. If small, may need to reduce number of folds
+
+
+--
+* Remember to declare `strata` if needed
+
+
+--
+
+
+```r
+cv &lt;- vfold_cv(train, strata = srt_tst_typ_X)
+```
+
+---
+# Check out the structure
+* Remember, just a list column.
+
+```r
+cv
+```
+
+```
+## #  10-fold cross-validation using stratification 
+## # A tibble: 10 x 2
+##    splits                 id    
+##    &lt;named list&gt;           &lt;chr&gt; 
+##  1 &lt;split [129.1K/14.3K]&gt; Fold01
+##  2 &lt;split [129.1K/14.3K]&gt; Fold02
+##  3 &lt;split [129.1K/14.3K]&gt; Fold03
+##  4 &lt;split [129.1K/14.3K]&gt; Fold04
+##  5 &lt;split [129.1K/14.3K]&gt; Fold05
+##  6 &lt;split [129.1K/14.3K]&gt; Fold06
+##  7 &lt;split [129.1K/14.3K]&gt; Fold07
+##  8 &lt;split [129.1K/14.3K]&gt; Fold08
+##  9 &lt;split [129.1K/14.3K]&gt; Fold09
+## 10 &lt;split [129.1K/14.3K]&gt; Fold10
+```
+
+---
+# Looking into it more
+* Use `analysis` to extract the data from the corresponding left out fold, or `assessment` to extract all the data *except* the left out fold 
+
+
+--
+
+.pull-left[
+
+
+```r
+cv$splits[[1]] %&gt;% 
+* assessment() %&gt;%
+  nrow()
+```
+
+```
+## [1] 14343
+```
+
+```r
+14343 / (14343 + 129084)
+```
+
+```
+## [1] 0.1000021
+```
+
+]
+
+.pull-right[
+
+
+```r
+cv$splits[[1]] %&gt;% 
+* analysis() %&gt;%
+  nrow()
+```
+
+```
+## [1] 129084
+```
+
+```r
+129084 / (14343 + 129084)
+```
+
+```
+## [1] 0.8999979
+```
+
+]
+
+
+---
+# Double check out stratification
+
+
+```r
+cv %&gt;% 
+  mutate(assessment_props = map(
+    splits, ~
+      assessment(.x) %&gt;% 
+      count(srt_tst_typ_X) %&gt;% 
+      mutate(prop = n/sum(n))
+      )
+    ) %&gt;% 
+  unnest(assessment_props)
+```
+
+```
+## # A tibble: 20 x 5
+##    splits                 id     srt_tst_typ_X     n       prop
+##    &lt;named list&gt;           &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;      &lt;dbl&gt;
+##  1 &lt;split [129.1K/14.3K]&gt; Fold01             0 14176 0.9883567 
+##  2 &lt;split [129.1K/14.3K]&gt; Fold01             1   167 0.01164331
+##  3 &lt;split [129.1K/14.3K]&gt; Fold02             0 14167 0.9877292 
+##  4 &lt;split [129.1K/14.3K]&gt; Fold02             1   176 0.01227079
+##  5 &lt;split [129.1K/14.3K]&gt; Fold03             0 14145 0.9861954 
+##  6 &lt;split [129.1K/14.3K]&gt; Fold03             1   198 0.01380464
+##  7 &lt;split [129.1K/14.3K]&gt; Fold04             0 14149 0.9864742 
+##  8 &lt;split [129.1K/14.3K]&gt; Fold04             1   194 0.01352576
+##  9 &lt;split [129.1K/14.3K]&gt; Fold05             0 14158 0.9871017 
+## 10 &lt;split [129.1K/14.3K]&gt; Fold05             1   185 0.01289828
+## 11 &lt;split [129.1K/14.3K]&gt; Fold06             0 14161 0.9873109 
+## 12 &lt;split [129.1K/14.3K]&gt; Fold06             1   182 0.01268912
+## 13 &lt;split [129.1K/14.3K]&gt; Fold07             0 14157 0.9870320 
+## 14 &lt;split [129.1K/14.3K]&gt; Fold07             1   186 0.01296800
+## 15 &lt;split [129.1K/14.3K]&gt; Fold08             0 14177 0.9884953 
+## 16 &lt;split [129.1K/14.3K]&gt; Fold08             1   165 0.01150467
+## 17 &lt;split [129.1K/14.3K]&gt; Fold09             0 14195 0.9897504 
+## 18 &lt;split [129.1K/14.3K]&gt; Fold09             1   147 0.01024962
+## 19 &lt;split [129.1K/14.3K]&gt; Fold10             0 14180 0.9887045 
+## 20 &lt;split [129.1K/14.3K]&gt; Fold10             1   162 0.01129550
+```
+
+
+---
+class: inverse center middle
+# Specify a model
+
+---
+# Select a model
+* As we go further in the term, we'll discuss quite a few different modeling options
+
+--
+
+* For now, we'll just use linear regression
+
+
+```r
+mod &lt;- linear_reg()
+```
+
+--
+
+* Importantly, we're just setting up the framework here. We're not estimating anything yet.
+
+--
+
+
+```r
+mod
+```
+
+```
+## Linear Regression Model Specification (regression)
+```
+
+---
+# Specify an "engine"
+* You can estimate a linear regression model a few different ways. For example, you could use OLS or Bayes (via `lm` or `rstanarm::stan_lm` (among others)).
+
+* Again, this will matter more when you get to more adavanced models. Let's just use `lm` as the engine for now.
+
+--
+
+
+```r
+mod &lt;- mod %&gt;% 
+  set_engine("lm")
+mod
+```
+
+```
+## Linear Regression Model Specification (regression)
+## 
+## Computational engine: lm
+```
+
+Full options include: `"lm"`, `"glmnet"`, `"stan"`, `"spark"`, and `"keras"`
+
+---
+# Specify the mode
+
+* Is this a regression or classification problem?
+
+
+--
+In this case, regression, so
+
+
+```r
+mod &lt;- mod %&gt;% 
+  set_mode("regression")
+mod
+```
+
+```
+## Linear Regression Model Specification (regression)
+## 
+## Computational engine: lm
+```
+
+For classification problems, just change `"regression"` to `"classification"`.
+
+
+--
+.b[.bolder[NOTE]]: In this case, we can't estimate a classification problem using linear regression, so it had already set this for us, but it's a good habit to get into anyway.
+
+---
+class:inverse center middle
+# Fit a model
+
+---
+# Fit a model
+* Let's start out with fitting a model with special education status and test type . e.g., `score ~ sp_ed_fg_Y + srt_tst_typ_X`.
+
+--
+* We'll fit this model to the `analysis` portion of every fold, then evaluate it against the `assessment` data in each fold.
+
+
+--
+* We'll do this with the `fit_resamples` function, which takes the following form: `fit_resamples(model, formula, resamples))`
+
+
+--
+* .b[.bolder[NOTE]]: `formula` can also be a `{recipes}` preprocessor object, which we'll talk about later.
+
+
+--
+* There are additional arguments you can pass, but these are the required arguments.
+
+---
+# Fit to resampled data
+
+
+```r
+m1 &lt;- fit_resamples(mod,
+                    score ~ sp_ed_fg_Y + srt_tst_typ_X,
+                    cv)
+m1
+```
+
+```
+## #  10-fold cross-validation using stratification 
+## # A tibble: 10 x 4
+##    splits                 id     .metrics         .notes          
+##  * &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
+##  1 &lt;split [129.1K/14.3K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  2 &lt;split [129.1K/14.3K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  3 &lt;split [129.1K/14.3K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  4 &lt;split [129.1K/14.3K]&gt; Fold04 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  5 &lt;split [129.1K/14.3K]&gt; Fold05 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  6 &lt;split [129.1K/14.3K]&gt; Fold06 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  7 &lt;split [129.1K/14.3K]&gt; Fold07 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  8 &lt;split [129.1K/14.3K]&gt; Fold08 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  9 &lt;split [129.1K/14.3K]&gt; Fold09 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+## 10 &lt;split [129.1K/14.3K]&gt; Fold10 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+```
+
+---
+# Check out evaluation metrics
+
+
+```r
+m1_metrics &lt;- m1 %&gt;% 
+  select(id, .metrics) %&gt;% 
+  unnest(.metrics) %&gt;% 
+  spread(.metric, .estimate)
+
+m1_metrics
+```
+
+```
+## # A tibble: 10 x 4
+##    id     .estimator     rmse       rsq
+##    &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;
+##  1 Fold01 standard   108.8665 0.8394948
+##  2 Fold02 standard   109.9880 0.8433294
+##  3 Fold03 standard   109.5087 0.8593819
+##  4 Fold04 standard   109.1377 0.8574915
+##  5 Fold05 standard   110.5839 0.8487960
+##  6 Fold06 standard   108.0378 0.8527581
+##  7 Fold07 standard   108.6616 0.8538474
+##  8 Fold08 standard   109.5346 0.8364236
+##  9 Fold09 standard   110.5059 0.8180363
+## 10 Fold10 standard   110.1109 0.8325454
+```
+
+---
+# Fit a second model
+### Include gender and ethnic code
+
+
+```r
+m2 &lt;- fit_resamples(mod,
+                    score ~ sp_ed_fg_Y + srt_tst_typ_X +
+                            gndr_M +
+                            ethnic_cd_B + ethnic_cd_H + ethnic_cd_I +
+                            ethnic_cd_P + ethnic_cd_W,
+                    cv)
+```
+
+
+---
+# Check out evaluation metrics again
+
+
+```r
+m2_metrics &lt;- m2 %&gt;% 
+  select(id, .metrics) %&gt;% 
+  unnest(.metrics) %&gt;% 
+  spread(.metric, .estimate)
+
+m2_metrics
+```
+
+```
+## # A tibble: 10 x 4
+##    id     .estimator     rmse       rsq
+##    &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;
+##  1 Fold01 standard   105.4446 0.8494323
+##  2 Fold02 standard   106.4193 0.8533319
+##  3 Fold03 standard   105.8158 0.8687059
+##  4 Fold04 standard   105.2863 0.8673732
+##  5 Fold05 standard   107.0426 0.8583252
+##  6 Fold06 standard   104.4352 0.8624123
+##  7 Fold07 standard   105.2087 0.8629995
+##  8 Fold08 standard   106.0241 0.8467325
+##  9 Fold09 standard   106.6597 0.8304931
+## 10 Fold10 standard   106.4441 0.8435119
+```
+
+
+---
+# Join metrics
+
+
+```r
+metrics_joined &lt;- left_join(m1_metrics, m2_metrics, 
+          by = c("id", ".estimator"),
+          suffix = c("_m1", "_m2"))
+
+metrics_joined
+```
+
+```
+## # A tibble: 10 x 6
+##    id     .estimator  rmse_m1    rsq_m1  rmse_m2    rsq_m2
+##    &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+##  1 Fold01 standard   108.8665 0.8394948 105.4446 0.8494323
+##  2 Fold02 standard   109.9880 0.8433294 106.4193 0.8533319
+##  3 Fold03 standard   109.5087 0.8593819 105.8158 0.8687059
+##  4 Fold04 standard   109.1377 0.8574915 105.2863 0.8673732
+##  5 Fold05 standard   110.5839 0.8487960 107.0426 0.8583252
+##  6 Fold06 standard   108.0378 0.8527581 104.4352 0.8624123
+##  7 Fold07 standard   108.6616 0.8538474 105.2087 0.8629995
+##  8 Fold08 standard   109.5346 0.8364236 106.0241 0.8467325
+##  9 Fold09 standard   110.5059 0.8180363 106.6597 0.8304931
+## 10 Fold10 standard   110.1109 0.8325454 106.4441 0.8435119
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="https://platform.twitter.com/widgets.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "atelier-dune-light",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

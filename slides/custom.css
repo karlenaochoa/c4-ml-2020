@@ -17,3 +17,10 @@ table {
 .r {
   color: #de4fbf;
 }
+
+.remark-code-line-highlighted { 
+	background-color: #3bac39; 
+	color: #fff; 
+	font-weight: 900; 
+}
+

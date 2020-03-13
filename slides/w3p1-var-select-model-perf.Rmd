@@ -1,0 +1,376 @@
+---
+title: "Variable selection and model performance"
+subtitle: "A walktrhough"
+author: "Daniel Anderson "
+date: "Week 3, Class 1"
+output:
+  xaringan::moon_reader:
+    css: ["default", "uo", "uo-fonts", "hygge", "custom.css"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-dune-light
+      highlightLines: true
+      countIncrementalSlides: false
+      beforeInit: "https://platform.twitter.com/widgets.js"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 13, 
+                      message = FALSE, 
+                      warning = FALSE,
+                      echo = TRUE)
+```
+
+# Agenda
+
+---
+# Scenario
+* Imagine you have a dataset with a lot of variables
+
+* You don't know much about what relates to the outcomes
+
+
+--
+* .bolder[.b[GOAL]]: Figure out the most important subset of variables that relate to the outcome
+
+
+---
+# Workflow
+* Split the dataset into train/test sets
+
+
+--
+* Prepare the dataset for $k$-fold cross validation
+
+
+--
+* Determine the type of model you will fit, and the problem type (regression or classification)
+
+
+--
+* Compare different models against the chosen objective funtion through $k$-fold CV
+
+
+--
+* Settle on a final model, and evaluate it against the test dataset
+
+
+---
+# Load the data
+* Please follow along!
+
+```{r load-data}
+library(tidyverse)
+library(tidymodels)
+d <- read_csv(here::here("data", "edld-654-final-project", "train.csv"))
+head(d)
+```
+
+---
+class: inverse center middle
+# House cleaning
+
+---
+# Select variables for inclusion
+* We don't want to include everything right now (too messy)
+* Limit to the following:
+```{r label, options}
+d <- d %>% 
+  select(id, gndr, ethnic_cd, enrl_grd, migrant_ed_fg, 
+         ind_ed_fg, sp_ed_fg, tag_ed_fg, econ_dsvntg, 
+         srt_tst_typ, score) 
+
+```
+
+* Let's also make things really easy on ourselves, and remove all missing data.
+
+```{r rem-missing}
+d <- d %>% 
+  drop_na()
+```
+
+---
+# Prep data for analysis
+
+We'll talk more about this later, but for now, we need to use [{recipes}](https://tidymodels.github.io/recipes/) at least a small amount so we can dummy code our categorical variables.
+
+```{r recipe}
+d <- recipe(score ~ ., data = d) %>% 
+  update_role(id, new_role = "id variable") %>% 
+  step_string2factor(all_nominal()) %>% 
+  step_dummy(all_nominal()) %>% 
+  prep() %>% 
+  juice()
+
+d
+```
+
+---
+# Split the data
+Note that this is already our "training" data, but we have to treat it like our full data (we don't have labels for the "test" data).
+
+--
+
+* Set a seed
+
+
+--
+* Create an initial split
+  + Consider any stratification variables
+  + Consdider what proportion you want in test/training
+
+
+--
+* Pull the training data j
+  + You could pull the test data too, but I usually wait until I get to the evaluation period.
+
+--
+```{r initial-split}
+set.seed(8675309)
+splt <- initial_split(d, strata = srt_tst_typ_X)
+train <- training(splt)
+```
+
+---
+# Check our stratification
+
+.pull-left[
+```{r check-strat1}
+d %>% 
+  count(srt_tst_typ_X) %>% 
+  mutate(prop = n/sum(n))
+```
+]
+
+.pull-right[
+```{r check-strat2}
+train %>% 
+  count(srt_tst_typ_X) %>% 
+  mutate(prop = n/sum(n))
+```
+]
+
+---
+# Create $k$-folds
+
+* For now, we'll just use the default 10 splits - note this may not *always* work best
+
+
+--
+* High variance betweeen folds? Consider repeated $k$-fold CV. (not the same thing as increasing number of folds)
+
+
+--
+* How big is your sample? Really large - probably don't need to worry. If small, may need to reduce number of folds
+
+
+--
+* Remember to declare `strata` if needed
+
+
+--
+
+```{r cv}
+cv <- vfold_cv(train, strata = srt_tst_typ_X)
+```
+
+---
+# Check out the structure
+* Remember, just a list column.
+```{r print-cv}
+cv
+```
+
+---
+# Looking into it more
+* Use `analysis` to extract the data from the corresponding left out fold, or `assessment` to extract all the data *except* the left out fold 
+
+
+--
+
+.pull-left[
+
+```{r prop1}
+cv$splits[[1]] %>% 
+  assessment() %>% #<<
+  nrow()
+
+14343 / (14343 + 129084)
+```
+
+]
+
+.pull-right[
+
+```{r prop2}
+cv$splits[[1]] %>% 
+  analysis() %>% #<<
+  nrow()
+
+129084 / (14343 + 129084)
+```
+
+]
+
+
+---
+# Double check out stratification
+
+```{r strata-fold-check}
+cv %>% 
+  mutate(assessment_props = map(
+    splits, ~
+      assessment(.x) %>% 
+      count(srt_tst_typ_X) %>% 
+      mutate(prop = n/sum(n))
+      )
+    ) %>% 
+  unnest(assessment_props)
+```
+
+
+---
+class: inverse center middle
+# Specify a model
+
+---
+# Select a model
+* As we go further in the term, we'll discuss quite a few different modeling options
+
+--
+
+* For now, we'll just use linear regression
+
+```{r set_model}
+mod <- linear_reg()
+```
+
+--
+
+* Importantly, we're just setting up the framework here. We're not estimating anything yet.
+
+--
+
+```{r print-model}
+mod
+```
+
+---
+# Specify an "engine"
+* You can estimate a linear regression model a few different ways. For example, you could use OLS or Bayes (via `lm` or `rstanarm::stan_lm` (among others)).
+
+* Again, this will matter more when you get to more adavanced models. Let's just use `lm` as the engine for now.
+
+--
+
+```{r set_engine}
+mod <- mod %>% 
+  set_engine("lm")
+mod
+```
+
+Full options include: `"lm"`, `"glmnet"`, `"stan"`, `"spark"`, and `"keras"`
+
+---
+# Specify the mode
+
+* Is this a regression or classification problem?
+
+
+--
+In this case, regression, so
+
+```{r set_mode}
+mod <- mod %>% 
+  set_mode("regression")
+mod
+```
+
+For classification problems, just change `"regression"` to `"classification"`.
+
+
+--
+.b[.bolder[NOTE]]: In this case, we can't estimate a classification problem using linear regression, so it had already set this for us, but it's a good habit to get into anyway.
+
+---
+class:inverse center middle
+# Fit a model
+
+---
+# Fit a model
+* Let's start out with fitting a model with special education status and test type . e.g., `score ~ sp_ed_fg_Y + srt_tst_typ_X`.
+
+--
+* We'll fit this model to the `analysis` portion of every fold, then evaluate it against the `assessment` data in each fold.
+
+
+--
+* We'll do this with the `fit_resamples` function, which takes the following form: `fit_resamples(model, formula, resamples))`
+
+
+--
+* .b[.bolder[NOTE]]: `formula` can also be a `{recipes}` preprocessor object, which we'll talk about later.
+
+
+--
+* There are additional arguments you can pass, but these are the required arguments.
+
+---
+# Fit to resampled data
+
+```{r fit_resamples1}
+m1 <- fit_resamples(mod,
+                    score ~ sp_ed_fg_Y + srt_tst_typ_X,
+                    cv)
+m1
+```
+
+---
+# Check out evaluation metrics
+
+```{r eval-metrics1}
+m1_metrics <- m1 %>% 
+  select(id, .metrics) %>% 
+  unnest(.metrics) %>% 
+  spread(.metric, .estimate)
+
+m1_metrics
+```
+
+---
+# Fit a second model
+### Include gender and ethnic code
+
+```{r fit_resamples2}
+m2 <- fit_resamples(mod,
+                    score ~ sp_ed_fg_Y + srt_tst_typ_X +
+                            gndr_M +
+                            ethnic_cd_B + ethnic_cd_H + ethnic_cd_I +
+                            ethnic_cd_P + ethnic_cd_W,
+                    cv)
+```
+
+
+---
+# Check out evaluation metrics again
+
+```{r eval-metrics2}
+m2_metrics <- m2 %>% 
+  select(id, .metrics) %>% 
+  unnest(.metrics) %>% 
+  spread(.metric, .estimate)
+
+m2_metrics
+```
+
+
+---
+# Join metrics
+
+```{r join-metrics1}
+metrics_joined <- left_join(m1_metrics, m2_metrics, 
+          by = c("id", ".estimator"),
+          suffix = c("_m1", "_m2"))
+
+metrics_joined
+```
