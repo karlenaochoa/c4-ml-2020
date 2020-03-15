@@ -1,6 +1,6 @@
 ---
 title: "Variable selection and model performance"
-subtitle: "A walktrhough"
+subtitle: "A walkthrough"
 author: "Daniel Anderson "
 date: "Week 3, Class 1"
 output:
@@ -19,9 +19,23 @@ knitr::opts_chunk$set(fig.width = 13,
                       message = FALSE, 
                       warning = FALSE,
                       echo = TRUE)
+library(tidyverse)
+theme_set(theme_minimal(25))
 ```
 
 # Agenda
+
+* Create a stratified split dataset
+
+* Specify a linear regression model
+
+* Use $k$-fold evaluation to evaluate different model fits 
+
+* Compare models based on evaluation criteria
+
+* Visualize and inspect measures of variable importance to refine model
+
+* Evaluate on test set
 
 ---
 # Scenario
@@ -71,15 +85,21 @@ class: inverse center middle
 # House cleaning
 
 ---
-# Select variables for inclusion
-* We don't want to include everything right now (too messy)
-* Limit to the following:
+# A bit of cleaning up
+
+* Remove columns with only a single value
+* Recode missing data on a few variables
+
 ```{r label, options}
 d <- d %>% 
-  select(id, gndr, ethnic_cd, enrl_grd, migrant_ed_fg, 
-         ind_ed_fg, sp_ed_fg, tag_ed_fg, econ_dsvntg, 
-         srt_tst_typ, score) 
-
+  select(-acdm_yr, -tst_valid_fg,
+         -grp_rpt_dist_partic, -rc_dist_partic,
+         -ayp_dist_partic,
+         -classification, -sem_tot)  %>% 
+  mutate(lang_cd = ifelse(is.na(lang_cd), "E", lang_cd),
+         calc_admn_cd = ifelse(is.na(calc_admn_cd), "G", calc_admn_cd),
+         ayp_lep = ifelse(is.na(ayp_lep), "G", ayp_lep),
+         tst_dt = lubridate::as_date(lubridate::mdy_hms(tst_dt)))
 ```
 
 * Let's also make things really easy on ourselves, and remove all missing data.
@@ -96,7 +116,7 @@ We'll talk more about this later, but for now, we need to use [{recipes}](https:
 
 ```{r recipe}
 d <- recipe(score ~ ., data = d) %>% 
-  update_role(id, new_role = "id variable") %>% 
+  update_role(contains("id"), new_role = "id variable") %>% 
   step_string2factor(all_nominal()) %>% 
   step_dummy(all_nominal()) %>% 
   prep() %>% 
@@ -121,7 +141,7 @@ Note that this is already our "training" data, but we have to treat it like our 
 
 
 --
-* Pull the training data j
+* Pull the training data
   + You could pull the test data too, but I usually wait until I get to the evaluation period.
 
 --
@@ -195,7 +215,7 @@ cv$splits[[1]] %>%
   assessment() %>% #<<
   nrow()
 
-14343 / (14343 + 129084)
+14343 / (14343 + 129078)
 ```
 
 ]
@@ -207,7 +227,7 @@ cv$splits[[1]] %>%
   analysis() %>% #<<
   nrow()
 
-129084 / (14343 + 129084)
+129084 / (14343 + 129078)
 ```
 
 ]
@@ -298,7 +318,8 @@ class:inverse center middle
 
 ---
 # Fit a model
-* Let's start out with fitting a model with special education status and test type . e.g., `score ~ sp_ed_fg_Y + srt_tst_typ_X`.
+* Let's start out with fitting a model with special education status and test type . e.g., `score ~ gndr_M + sp_ed_fg_Y`.
+
 
 --
 * We'll fit this model to the `analysis` portion of every fold, then evaluate it against the `assessment` data in each fold.
@@ -320,9 +341,10 @@ class:inverse center middle
 
 ```{r fit_resamples1}
 m1 <- fit_resamples(mod,
-                    score ~ sp_ed_fg_Y + srt_tst_typ_X,
+                    score ~ gndr_M + sp_ed_fg_Y + srt_tst_typ_X,
                     cv)
 m1
+
 ```
 
 ---
@@ -339,20 +361,18 @@ m1_metrics
 
 ---
 # Fit a second model
-### Include gender and ethnic code
+### Include interaction
 
 ```{r fit_resamples2}
 m2 <- fit_resamples(mod,
-                    score ~ sp_ed_fg_Y + srt_tst_typ_X +
-                            gndr_M +
-                            ethnic_cd_B + ethnic_cd_H + ethnic_cd_I +
-                            ethnic_cd_P + ethnic_cd_W,
+                    score ~ gndr_M*sp_ed_fg_Y + srt_tst_typ_X,
                     cv)
+m2
 ```
 
 
 ---
-# Check out evaluation metrics again
+# Check evaluation metrics again
 
 ```{r eval-metrics2}
 m2_metrics <- m2 %>% 
@@ -374,3 +394,245 @@ metrics_joined <- left_join(m1_metrics, m2_metrics,
 
 metrics_joined
 ```
+
+---
+# Interaction worth it?
+### Move back to long
+```{r inspect-interaction}
+metrics <- metrics_joined %>% 
+  pivot_longer(cols = contains("_"),
+               names_to = c("metric", "model"),
+               values_to = "estimate",
+               names_sep = "_")
+metrics
+```
+
+---
+# Inspect by RMSE
+
+```{r rmse-min1}
+metrics %>% 
+  filter(metric == "rmse") %>% 
+  group_by(id) %>% 
+  summarize(estimate = min(estimate)) 
+```
+
+---
+
+```{r rmse-min2}
+metrics %>% 
+  filter(metric == "rmse") %>% 
+  group_by(id) %>% 
+  summarize(estimate = min(estimate)) %>% 
+  semi_join(metrics, .) #<<
+```
+
+
+---
+```{r rmse-min3}
+metrics %>% 
+  filter(metric == "rmse") %>% 
+  group_by(id) %>% 
+  summarize(estimate = min(estimate)) %>% 
+  semi_join(metrics, .) %>% 
+  count(model) #<<
+```
+
+
+--
+### Answer: 🤷
+
+
+---
+# Alternative way to think about it
+
+```{r change-rmse}
+metrics_joined %>% 
+  mutate(rmse_diff = round(rmse_m1 - rmse_m2, 3),
+         rsq_diff  = round(rsq_m1 - rsq_m2, 3)) %>% 
+  select(id, ends_with("diff"))
+```
+
+--
+### Conclusion: Probs not
+
+---
+# How to improve this model
+* I've approached this from a (light) theoretical variable-inclusion perspective
+
+  + Hopefully you have domain knowledge in your application that allows you to start from a meaningful place.
+  
+  + Other variables that theoretically relate that we could start with (e.g., grade level, economic disadvantage status)
+ 
+
+--
+* What if I didn't know? We could start out by looking at all variables, and choosing the most important
+
+
+--
+
+```{r vip1}
+library(vip)
+vip_1a <- vip(lm(score ~ ., train))
+```
+
+---
+```{r show-vip1}
+vip_1a
+```
+
+
+--
+
+This basically tells us that outside of sped (which we've included already) grade level (for the extended assessment `X`), gifted/talented (tag), and economic disadvantage are important predictors. Let's look a bit deeper.
+
+---
+```{r vip1b1}
+vip_1b <- vi(lm(score ~ ., train))
+vip_1b
+```
+
+Numbers view of the previous plot
+
+---
+```{r vip1b2}
+vip_1b %>% 
+  filter(!str_detect(Variable, "^tst_b")) #<<
+```
+
+--
+So outside of grade, it appears economic disadvantage, tag, sped, and ethnic code are most important
+
+---
+# New model
+
+```{r fit_resamples3}
+m3 <- fit_resamples(mod,
+                    score ~ sp_ed_fg_Y + #srt_tst_typ_X +
+                            econ_dsvntg_Y +
+                            tag_ed_fg_Y +
+                            tst_bnch_X3 + tst_bnch_X4 + tst_bnch_X5 +
+                            tst_bnch_X6 + tst_bnch_X7 + tst_bnch_X8 +
+                            ethnic_cd_H + ethnic_cd_B + ethnic_cd_I +
+                            ethnic_cd_M + ethnic_cd_P,
+                    cv)
+m3
+```
+
+
+---
+# M3 metrics
+
+```{r m3-metrics}
+m3 %>% 
+  select(id, .metrics) %>% 
+  unnest(.metrics) %>% 
+  spread(.metric, .estimate)
+```
+
+---
+## Improving model performance further
+* Other variables? (e.g., grade level of general assessment)
+
+* Interactions?
+
+* Nonlinearity?
+
+
+--
+### Refining the model
+* We have quite a bit of repeated code here. If this were the strategy we were using, we'd probably want to write functions for the model comparisons.
+
+
+---
+# How are we doing on time?
+### Skip if not enough time, otherwise...
+
+Try to refine this model further to boost model performance more! Consider modifications listed in previous slide (inclusion of other variables, nonlinear terms, or interactions)
+
+`r countdown::countdown(minutes = 10, top = 0.5, bottom = 0.5, right = 0.5, left = 0.75)`
+
+---
+# Evaluation on test set
+* Note we wouldn't usually jump to this point yet, but let's try.
+
+
+--
+### First: Extract test dataset
+
+```{r test}
+test <- testing(splt)
+test
+```
+
+---
+# Fit model
+
+```{r pred}
+test_mod <- fit(mod, #<<
+                score ~ sp_ed_fg_Y +
+                        econ_dsvntg_Y +
+                        tag_ed_fg_Y +
+                        tst_bnch_X3 + tst_bnch_X4 + tst_bnch_X5 +
+                        tst_bnch_X6 + tst_bnch_X7 + tst_bnch_X8 +
+                        ethnic_cd_H + ethnic_cd_B + ethnic_cd_I +
+                        ethnic_cd_M + ethnic_cd_P,
+                data = test) #<<
+```
+
+---
+# Look at model
+### Just for fun
+
+```{r look-test-mod}
+summary(test_mod$fit)
+```
+
+---
+# Make predictions
+
+```{r preds}
+preds <- test %>% 
+  mutate(estimate = predict(test_mod$fit, newdata = .)) %>% 
+  select(truth = score, estimate)
+preds
+```
+
+---
+# Evaluate prediction
+
+```{r test-eval}
+bind_rows(
+  rmse(preds, truth, estimate),
+  rsq(preds, truth, estimate)
+)
+```
+
+---
+# Moving to kaggle
+* What do we need to do to make predictions from this model for kaggle?
+
+
+--
+* Preprocess the `train.csv` using the recipe we used above
+
+
+--
+* Fit the model to the preprocessed data
+
+
+--
+* Make predictions
+  
+  + Will we be able to evaluate?
+  
+
+--
+* Upload a csv file that has a `Id` and `Predicted` columns. 
+
+
+---
+class: inverse center middle
+
+# Next time
+### Lab 2
