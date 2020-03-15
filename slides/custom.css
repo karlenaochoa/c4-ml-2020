@@ -24,3 +24,6 @@ table {
 	font-weight: 900; 
 }
 
+.remark-code-line-highlighted .hljs-string {
+	color: #FFF200 !important;
+}
