@@ -24,7 +24,8 @@ math <- import("C:/Users/jnese/Desktop/BRT/Teaching/Predictive-Modeling/c4-ml-20
   as_tibble()
 
 math <- math %>% 
-  drop_na(lat)
+  drop_na(lat) %>% 
+  mutate_at(vars(enrl_grd, srt_tst_typ), list(~as.factor(.)))
 ```
 
 # 1 - Initial Split
