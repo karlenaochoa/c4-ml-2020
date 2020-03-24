@@ -266,5 +266,22 @@ knn_clas_res %>%
 ```
 
 
+```{r}
+
+knn_reg_res %>% 
+  select(`.metrics`) %>% 
+  unnest(cols = `.metrics`) %>% 
+  group_by(neighbors, weight_func, dist_power, `.metric`) %>%
+  summarise(means = mean(`.estimate`)) %>%  
+  pivot_longer(
+    cols = c(neighbors, dist_power),
+    names_to = "tunes",
+    values_to = "Parameter Value" 
+  ) %>% 
+  ggplot(aes(`Parameter Value`, means, color = weight_func)) +
+  geom_point() +
+  facet_grid(`.metric` ~ tunes, scales = "free_x")
+
+```
 
 
