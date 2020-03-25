@@ -10,7 +10,9 @@ names(d)
 #   View()
 
 d <- d %>% 
-  filter(rit_tot > 0)
+  filter(rit_tot > 0,
+         srt_tst_typ != "X") %>% 
+  .[ ,map_dbl(., ~length(unique(.x))) > 1]
 
 rnorm_v <- function(mean_v, sd_v) {
   if(length(mean) != length(sd)) {
@@ -25,8 +27,7 @@ d <- d %>%
 
 # Do some double checking
 ggplot(d, aes(score, rit_tot)) +
-  geom_point() +
-  facet_wrap(~srt_tst_typ, scales = "free")
+  geom_point()
 
 d %>% 
   group_by(attnd_schl_inst_id) %>% 
@@ -84,8 +85,7 @@ d <- left_join(d, cuts) %>%
          classification = map2_dbl(score, cuts, classify))
 
 d %>% 
-  count(srt_tst_typ, pl5b_tot, classification) %>% 
-  filter(srt_tst_typ == "T") %>% 
+  count(pl5b_tot, classification) %>% 
   ggplot(aes(classification, pl5b_tot)) +
   geom_tile(aes(fill = n)) +
   colorspace::scale_fill_continuous_diverging(palette = "Blue-Red 3") +
@@ -105,14 +105,14 @@ geo <- geo %>%
 
 
 d_geo <- d %>% 
-  left_join(geo, by = c(attnd_dist_inst_id = "district_id", attnd_schl_inst_id = "school_id"))
+  left_join(geo, by = c(attnd_dist_inst_id = "district_id", 
+                        attnd_schl_inst_id = "school_id"))
   
 
 # write out file
 d_geo %>% 
   rowid_to_column("id") %>% 
-  select(-rit_tot, -cuts, -pl5b_tot) %>% 
-  select(id:tst_valid_fg, score, sem_tot, classification, everything()) %>% 
+  select(-rit_tot, -cuts, -sem_tot, -pl5b_tot) %>% 
   write_csv(here::here("data", "state-test-simulated.csv"))
 
 

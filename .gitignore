@@ -39,3 +39,13 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+
+data/state-test-simulated.csv
+
+data/solutions.csv
+
+data/sample-submission.csv
+
+data/test.csv
+
+data/train.csv
