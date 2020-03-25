@@ -138,6 +138,7 @@ knn_params <- parameters(neighbors(), weight_func())
 knn_reg_grid <- grid_regular(neighbors(), weight_func(), levels = c(15, 5))
 dim(knn_reg_grid)
 
+str(knn_params)
 
 knn_reg_grid %>% 
   ggplot(aes(neighbors, weight_func)) +
@@ -145,11 +146,30 @@ knn_reg_grid %>%
   scale_x_continuous(breaks = c(1:15))
 ```
 
+## Uuse the arguments within the hyperparameters
+```{r}
+?neighbors()
+?weight_func()
+values_weight_func
+knn_params <- parameters(neighbors(range = c(1, 15)), 
+                         weight_func(values = values_weight_func[1:5]))
+
+knn_reg_grid <- grid_regular(knn_params, levels = c(15, 5))
+
+knn_reg_grid %>% 
+  ggplot(aes(neighbors, weight_func)) +
+  geom_point()
+
+                        
+                         
+```
+
+
 ## Let's make a regular grid by hand
 ```{r}
 knn_reg_grid_man <- expand.grid(
   neighbors = c(1:15), 
-  weight_func = weight_func()$values[1:5]
+  weight_func = values_weight_func[1:5]
   )
 
 knn_reg_grid_man %>% 
@@ -283,5 +303,6 @@ knn_reg_res %>%
   facet_grid(`.metric` ~ tunes, scales = "free_x")
 
 ```
+
 
 
