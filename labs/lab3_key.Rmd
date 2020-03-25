@@ -1,7 +1,6 @@
 ---
 title: "Lab 3"
 author: "Key"
-date: "4/15/2020"
 output: html_document
 ---
 
@@ -17,7 +16,7 @@ Read in the `state-test-simulated` data.
 
 ```{r, data}
 math <- import("C:/Users/jnese/Desktop/BRT/Teaching/Predictive-Modeling/c4-ml-2020/c4-ml-2020/data/state-test-simulated.csv") %>% 
-  as_tibble()
+  as_tibble() 
 
 math <- math %>% 
   drop_na(lat) 
