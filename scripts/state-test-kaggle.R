@@ -4,12 +4,13 @@ library(tidymodels)
 d <- read_csv(here::here("data", "state-test-simulated.csv")) 
 
 set.seed(8675309)
-split <- initial_split(d, strata = srt_tst_typ)
+split <- initial_split(d)
 
 train <- training(split)
 test <- testing(split)
 
-use <- replicate(nrow(test), sample(c("Public", "Private"), 1, prob = c(.3, .7)))
+use <- replicate(nrow(test), 
+                 sample(c("Public", "Private"), 1, prob = c(.3, .7)))
 
 test <- test %>% 
   mutate(Usage = use) 
