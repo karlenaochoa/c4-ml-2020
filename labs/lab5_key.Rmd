@@ -1,0 +1,182 @@
+---
+title: "Lab 5"
+author: "Key"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      warning = FALSE)
+
+theme_set(theme_minimal())
+```
+
+The goal of this lab is to apply and tune *K*-nearest neighbor models, and explore non-regular grids.
+
+For this lab, we are going to use the `Ames` housing data - the `{iris}` of machine learning data sets. The `Ames` data describes "the sale of individual residential property in Ames, Iowa from 2006 to 2010" ([De Cock, 2011](http://jse.amstat.org/v19n3/decock.pdf)) The raw data set "contains 2930 observations and a large number of explanatory variables (23 nominal, 23 ordinal, 14 discrete, and 20 continuous) involved in assessing home values." 
+
+The `Ames` raw data comes from the `{AmesHousing}` package. Explore the variables with `?ames_raw`. We will apply the `make_ames()` function to use the processed version of the data, where all factors are unordered, column names are Snake_Case, some columns were removed, some missing values were recoded, many factor levels were changed to more understandable, and longitude and latitude are included. See `?make_ames` for more infomormation.
+
+Note that the goal of this lab is **not** to make the most accurate predictions, so please do not get too bogged down into the data features. Some useful features are: **Neighborhood**, **Year_Sold**, **Longitude**, **Latitude**, **Gr_Liv_Area**, **Bedroom_AbvGr**, **Full_Bath**, **Half_Bath**.
+
+We will be predicting `Sale_Price`.
+
+### Data
+Run the code chunk below to load the packages and the processed `ames` data that you will be using. Note that you may need to first install `{AmesHousing}` if you have never done so.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(AmesHousing)
+
+#Make the processed ames data
+ames <- make_ames()
+
+```
+
+### Get to know the data
+Briefly explore the `ames` data to get a (small) understanding of the data set. How you do this is entirely up to you; you could use look at the correlations between the features and `Sale_Price`, use the `{skimr}` package to get an initial look at the data, make some quick plots using `{ggplot2}`, or use your usual routine for initial data exploration. Try to do this in less than 15 minutes.
+
+```{r, include=FALSE}
+
+skimr::skim(ames)
+
+ames %>% 
+  select(Neighborhood, Year_Sold, Longitude, Latitude, Gr_Liv_Area, Bedroom_AbvGr, Full_Bath, Half_Bath, Sale_Price) %>% 
+  skimr::skim()
+
+table(ames$Neighborhood)
+
+ames %>% 
+  select(Year_Sold, Longitude, Latitude, Gr_Liv_Area, Bedroom_AbvGr, Full_Bath, Half_Bath, Sale_Price) %>%
+  corrr::correlate(., quiet = TRUE) %>% 
+  corrr::focus(Sale_Price)
+
+
+```
+
+
+### Split and Resample
+Split the `ames` data from above into a training and test set (use seed `210`). 
+Use one of the methods we have learned to resample the traning set. It is up to you if you want/need to use stratified resampling.
+```{r}
+set.seed(3000)
+
+ames_split <- initial_split(ames) 
+
+ames_train <- training(ames_split)
+ames_test  <- testing(ames_split)
+
+ames_cv <- vfold_cv(ames_train, strata = "Sale_Price")
+```
+
+### Preprocess
+Create a `recipe` to prepare your data for a *K*NN model. 
+
+```{r, include=FALSE}
+knn_rec <- 
+  recipe(
+    Sale_Price ~ Neighborhood + Year_Sold + Longitude + Latitude + Gr_Liv_Area + Bedroom_AbvGr + Full_Bath + Half_Bath, 
+    data = ames_train
+  ) %>%
+  step_novel(Neighborhood) %>% #step_novel creates a specification of a recipe step that will assign a previously unseen factor level to a new value
+  step_dummy(Neighborhood) 
+```
+
+### Set a *K*NN model
+Create a `{parsnip}` model for a *K*NN model and allow for the `neighbors` and `weight_func` hyperparameters to be tuned.
+
+```{r, echo=FALSE}
+knn_mod <- 
+  nearest_neighbor() %>%
+  set_engine("kknn") %>% 
+  set_mode("regression") %>% 
+  set_args(neighbors = tune(),
+           weight_func = tune())
+```
+
+### Create non-regular grid
+Create a non-regular, space-filling design grid using `grid_max_entropy` and 50 parameter values.
+
+Tune the range of `neighbors` hyperparameter for `c(1:20)` and any 5 levels of the `weight_func` hyperparameter.
+
+Produce a `ggplot` to show a graphical representation of your non-regular grid.
+
+```{r}
+knn_params <- parameters(neighbors(range = c(1, 20)), weight_func(values = c("optimal", "rectangular", "triangular", "gaussian", "cos"))) # or values = values_weight_func[1:5]
+
+knn_sfd <- grid_max_entropy(knn_params, size = 50)
+
+knn_sfd %>% 
+  ggplot(aes(neighbors, weight_func)) +
+  geom_point()
+```
+
+### Fit your tuned models
+Fit your tuned *K*NN model to your `resamples`, using your specified `recipe` and non-regular `grid`.
+
+Show the top 5 tuned parameter models with the best `rmse` estimates. 
+
+```{r}
+knn_res <- tune::tune_grid(
+  knn_mod,
+  preprocessor = knn_rec,
+  resamples = ames_cv,
+  grid = knn_sfd,
+  control = tune::control_resamples(verbose = TRUE,
+                                    save_pred = TRUE)
+)
+
+knn_res %>% 
+  show_best(metric = "rmse")
+
+```
+
+### Recreate `autoplot()`
+Run `autoplot()` on your fitted tuned model object. Then reproduce that `autoplot` figure using `ggplot2`.
+
+```{r}
+autoplot(knn_res)
+
+knn_res %>% 
+  select(`.metrics`) %>% 
+  unnest(cols = `.metrics`) %>% 
+  group_by(neighbors, weight_func, `.metric`) %>%
+  summarise(Performance = mean(`.estimate`)) %>%
+  ggplot(aes(neighbors, Performance, color = weight_func)) +
+  geom_point() +
+  facet_wrap(~`.metric`, scales = "free_y")
+```
+
+### Final fit
+Conduct your final fit by using:
+  + `select_best` to select your best tuned model
+  + `finalize_model` to finalize your model using your best tuned model
+  + `finalize_recipe` to finalize your recipe using your best tuned model
+  + `last_fit` to run your last fit with your `finalized_model` and `finalized_recipe`on your initial data split
+  + `collect_metrics` from your final results
+
+```{r}
+# Select best tuning parameters
+knn_best <- knn_res %>%
+  select_best(metric = "rmse")
+
+# Finalize your model using the best tuning parameters
+knn_mod_final <- knn_mod %>%
+  finalize_model(knn_best) 
+
+# Finalize your recipe using the best turning parameters
+knn_rec_final <- knn_rec %>% 
+  finalize_recipe(knn_best)
+
+# Run your last fit on your initial data split
+knn_test_results <- knn_mod_final %>% 
+    last_fit(preprocessor = knn_rec_final,
+             split = ames_split)
+
+#Collect metrics
+knn_test_results %>% 
+  collect_metrics()
+```
+
