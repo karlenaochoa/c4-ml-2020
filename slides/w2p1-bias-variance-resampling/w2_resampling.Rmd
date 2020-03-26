@@ -36,6 +36,9 @@ names(math_split)
 
 class(math_split)
 
+
+math_train <- training(math_split)
+math_test  <- testing(math_split)
 ```
 
 

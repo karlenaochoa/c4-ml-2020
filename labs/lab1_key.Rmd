@@ -1,29 +1,29 @@
 ---
 title: "Lab1"
 author: "Key"
-date: "3/5/2020"
 output: 
   html_document:
     highlight: tango
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
 
 library(tidyverse)
-library(rio)
 library(tidymodels)
 ```
 
-Read in the `state-test-simulated` data.
+Read in the `train.csv` data.
 
 ```{r, data}
-math <- import("C:/Users/jnese/Desktop/BRT/Teaching/Predictive-Modeling/c4-ml-2020/c4-ml-2020/data/state-test-simulated.csv") %>% 
+math <- read_csv(here::here("data", "edld-654-spring-2020", "train.csv")) %>% 
   as_tibble()
 
 ```
 
-1. Initial Split
+### 1. Initial Split
 
 Split the data into a training set and a testing set as two named objects. Produce the `class` type for the initial split object and the training and test sets.
 
@@ -40,14 +40,14 @@ class(math_train)
 class(math_test)
 ```
 
-2. Use code to show the proportion of the `state-test-simulated` data that went to each of the training and test sets.
+### 2. Use code to show the proportion of the `train.csv` data that went to each of the training and test sets.
 
 ```{r}
 nrow(math_train)/nrow(math)
 nrow(math_test)/nrow(math)
 ```
 
-3. *k*-fold cross-validation
+### 3. *k*-fold cross-validation
 
 Use 10-fold cross-validation to resample the traning data.
 
@@ -57,12 +57,12 @@ set.seed(3000)
 cv_folds <- vfold_cv(math_train)
 ```
 
-4. Use `{purrr}` to add the following columns to your *k*-fold CV object:
+### 4. Use `{purrr}` to add the following columns to your *k*-fold CV object:
 * *analysis_n* = the *n* of the analysis set for each fold
 * *assessment_n* = the *n* of the assessment set for each fold
 * *analysis_p* = the proportion of the analysis set for each fold
 * *assessment_p* = the proportion of the assessment set for each fold
-* *extended_p* = the proportion of students taking the extended assessment for each fold
+* *sped_p* = the proportion of students receiving special education services (`sp_ed_fg`) for each fold
 
 ```{r}
 
@@ -74,10 +74,10 @@ cv_folds %>%
          analysis_p = analysis_n/(analysis_n + assessment_n),
          assessment_p = assessment_n/(analysis_n + assessment_n),
          extended_p = map_dbl(splits,
-                               ~sum(.$data$srt_tst_typ == "X")/nrow(.$data)))
+                               ~sum(.$data$sp_ed_fg == "Y", na.rm = TRUE)/nrow(.$data)))
 ```
 
-5. Please demonstrate that that there are **no** common values in the `id` column between `Fold01` & `Fold02`, and `Fold09` & `Fold10` in your 10-fold cross-validation object.
+### 5. Please demonstrate that that there are **no** common values in the `id` column between `Fold01` & `Fold02`, and `Fold09` & `Fold10` in your 10-fold cross-validation object.
 
 ```{r}
 
@@ -112,14 +112,18 @@ length(
 
 ```
 
-6. Try to answer these next questions without running similar code on real data.
+### 6. Try to answer these next questions without running similar code on real data.
 
 For the following code `vfold_cv(fictional_train, v = 20)`:
 
 * What is the proportion in the analysis set for each fold?
+
+<!-- .95 -->
 * What is the proportion in the assessment set for each fold?
 
-7. Use Monte Carlo CV to resample the training data with 20 resamples and .30 of each resample reserved for the assessment sets.
+<!-- .05 -->
+
+### 7. Use Monte Carlo CV to resample the training data with 20 resamples and .30 of each resample reserved for the assessment sets.
 
 ```{r}
 set.seed(3000)
@@ -127,17 +131,17 @@ mc_folds <- mc_cv(math_train, prop = .70, times = 20)
 
 ```
 
-8. Please demonstrate that that there **are** common values in the `id` column between `Resample 8` & `Resample 12`, and `Resample 2` & `Resample 20`in your MC CV object.
+### 8. Please demonstrate that that there **are** common values in the `id` column between `Resample 8` & `Resample 12`, and `Resample 2` & `Resample 20`in your MC CV object.
 
 ```{r}
 
 length(
   intersect(
-    mc_folds$splits[[2]] %>% 
+    mc_folds$splits[[8]] %>% 
               assessment() %>% 
               select(id) %>% 
               pull(), 
-            mc_folds$splits[[20]] %>% 
+            mc_folds$splits[[12]] %>% 
               assessment() %>% 
               select(id) %>% 
               pull()
@@ -160,11 +164,19 @@ length(
 )
 ```
 
-9. You plan on doing bootstrap resampling with a training set with *n* = 500.
+### 9. You plan on doing bootstrap resampling with a training set with *n* = 500.
 
 * What is the sample size of an analysis set for a given bootstrap resample?
+
+<!-- *n* = 500 -->
 * What is the sample size of an assessment set for a given bootstrap resample?
+
+<!-- Will vary by boostrap resample. -->
 * If each row was selected only once for an analysis set:
   + what would be the size of the analysis set?
+  
+  <!-- *n* = 500 -->
   + and what would be the size of the assessment set?
+  
+  <!-- *n* = 0 -->
 
