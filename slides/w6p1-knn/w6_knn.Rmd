@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-library(rio)
+library(here)
 library(tidyverse)
 library(tidymodels)
 library(tune)
@@ -21,12 +21,13 @@ theme_set(theme_minimal())
 ```
 
 ```{r}
-math <- import("C:/Users/jnese/Desktop/BRT/Teaching/Predictive-Modeling/c4-ml-2020/c4-ml-2020/data/state-test-simulated.csv") %>% 
+
+math <- read_csv(here::here("data", "edld-654-spring-2020", "train.csv")) %>% 
   as_tibble()
 
 math <- math %>% 
   drop_na(lat) %>% 
-  mutate_at(vars(enrl_grd, srt_tst_typ), list(~as.factor(.))) %>% 
+  mutate_at(vars(enrl_grd), list(~as.factor(.))) %>% 
   mutate(classification = factor(classification)) %>% 
   sample_frac(size = .02)
 
@@ -36,7 +37,7 @@ math <- math %>%
 
 ```{r}
 set.seed(210)
-math_split <- initial_split(math, strata = "srt_tst_typ") 
+math_split <- initial_split(math) 
 
 math_train <- training(math_split)
 math_test  <- testing(math_split)
@@ -47,7 +48,7 @@ math_test  <- testing(math_split)
 
 ```{r}
 set.seed(210)
-math_cv <- vfold_cv(math_train, strata = "srt_tst_typ")
+math_cv <- vfold_cv(math_train)
 ```
 
 # 3 - Preprocess
@@ -56,11 +57,11 @@ math_cv <- vfold_cv(math_train, strata = "srt_tst_typ")
 ```{r}
 knn_reg_rec <- 
   recipe(
-    score ~ enrl_grd + srt_tst_typ + lat + lon, 
+    score ~ enrl_grd + lat + lon, 
     data = math_train
   ) %>%
-  step_dummy(recipes::all_nominal()) %>%
-  step_normalize(recipes::all_numeric()) 
+  step_dummy(enrl_grd) %>%
+  step_normalize(lat, lon) 
 ```
 
 # 4 - Set Model
@@ -122,13 +123,15 @@ knn_reg_res %>%
   show_best(metric = "rmse", n = 1)
 
 knn_reg_res %>% 
+  select_best(metric = "rmse")
+
+knn_reg_res %>% 
   autoplot() +
   geom_line()
 
 
 knn_reg_res %>% 
-  autoplot(metric = "rmse") +
-  geom_line()
+  autoplot(metric = "rmse")
 
 ```
 
@@ -228,10 +231,10 @@ knn_lhs %>%
 ```{r}
 knn_clas_rec <- 
   recipe(
-    classification ~ enrl_grd + srt_tst_typ + lat + lon, 
+    classification ~ enrl_grd + lat + lon, 
     data = math_train
   ) %>%
-  step_dummy(enrl_grd, srt_tst_typ)
+  step_dummy(enrl_grd)
 ```
 
 # Set Model
@@ -248,7 +251,7 @@ knn_clas_mod <- nearest_neighbor() %>%
 # Use an SFD grid
 ```{r}
 knn_params <- parameters(neighbors(), weight_func())
-(knn_sfd <- grid_max_entropy(knn_params, size = 50))
+knn_sfd <- grid_max_entropy(knn_params, size = 50)
 ```
 
 
@@ -280,11 +283,9 @@ knn_clas_res %>%
   show_best(metric = "roc_auc", n = 5)
 
 knn_clas_res %>% 
-  autoplot(metric = "roc_auc") +
-  geom_line()
+  autoplot(metric = "roc_auc") 
 
 ```
-
 
 ```{r}
 
@@ -304,5 +305,28 @@ knn_reg_res %>%
 
 ```
 
+# Final fit
+```{r}
+# Select best tuning parameters
+knn_clas_best <- knn_clas_res %>%
+  select_best(metric = "roc_auc")
+
+# Finalize your model using the best tuning parameters
+knn_clas_mod_final <- knn_clas_mod %>%
+  finalize_model(knn_clas_best) 
+
+# Finalize your recipe using the best turning parameters
+knn_clas_rec_final <- knn_clas_rec %>% 
+  finalize_recipe(knn_clas_best)
+
+# Run your last fit on your initial data split
+knn_clas_test_results <- knn_clas_mod_final %>% 
+    last_fit(preprocessor = knn_clas_rec_final,
+             split = math_split)
+
+#Collect metrics
+knn_clas_test_results %>% 
+  collect_metrics()
+```
 
 
