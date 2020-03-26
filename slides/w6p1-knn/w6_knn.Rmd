@@ -135,6 +135,43 @@ knn_reg_res %>%
 
 ```
 
+# Final fit
+```{r}
+# Select best tuning parameters
+knn_reg_best <- knn_reg_res %>%
+  select_best(metric = "rmse")
+
+# Finalize your model using the best tuning parameters
+knn_reg_mod_final <- knn_reg_mod %>%
+  finalize_model(knn_reg_best) 
+
+# Finalize your recipe using the best turning parameters
+knn_reg_rec_final <- knn_reg_rec %>% 
+  finalize_recipe(knn_reg_best)
+
+# Run your last fit on your initial data split
+cl <- makeCluster(8)
+registerDoParallel(cl)
+knn_reg_test_results <- last_fit(
+  knn_reg_mod_final, 
+  preprocessor = knn_reg_rec_final, 
+  split = math_split)
+stopCluster(cl)
+
+#Collect metrics
+knn_reg_test_results %>% 
+  collect_metrics()
+
+knn_reg_test_results %>% 
+  select(`.predictions`) %>% 
+  unnest(cols = `.predictions`) %>% 
+  mutate(resid_z = scale(`.pred` - score)) %>% 
+  ggplot(aes(`.pred`, resid_z)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "steelblue")
+```
+
+
 ## Let's look at a regular grid
 ```{r}
 knn_params <- parameters(neighbors(), weight_func())
@@ -305,28 +342,6 @@ knn_reg_res %>%
 
 ```
 
-# Final fit
-```{r}
-# Select best tuning parameters
-knn_clas_best <- knn_clas_res %>%
-  select_best(metric = "roc_auc")
 
-# Finalize your model using the best tuning parameters
-knn_clas_mod_final <- knn_clas_mod %>%
-  finalize_model(knn_clas_best) 
-
-# Finalize your recipe using the best turning parameters
-knn_clas_rec_final <- knn_clas_rec %>% 
-  finalize_recipe(knn_clas_best)
-
-# Run your last fit on your initial data split
-knn_clas_test_results <- knn_clas_mod_final %>% 
-    last_fit(preprocessor = knn_clas_rec_final,
-             split = math_split)
-
-#Collect metrics
-knn_clas_test_results %>% 
-  collect_metrics()
-```
 
 

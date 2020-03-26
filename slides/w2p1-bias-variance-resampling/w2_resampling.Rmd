@@ -1,5 +1,5 @@
 ---
-title: "w2"
+title: "w2p1"
 author: "Joe Nese"
 date: "3/2/2020"
 output: html_document
@@ -19,19 +19,15 @@ theme_set(theme_minimal())
 
 ```{r}
 
-math_split <- initial_split(math)
-
-math_train <- training(math_split)
-math_test  <- testing(math_split)
+math <- read_csv(here::here("data", "edld-654-spring-2020", "train.csv")) %>% 
+  as_tibble()
 
 ```
 
 ```{r}
 
-math <- import(here::here("data", "state-test-simulated.csv")) %>% 
-  as_tibble()
-
 set.seed(210)
+
 (math_split <- initial_split(math))
 
 math_split %>% training() %>% nrow() / nrow(math)
@@ -56,7 +52,7 @@ math_split70 %>% training() %>% nrow() / nrow(math)
 ```{r}
 
 set.seed(210)
-(cv_splits <- vfold_cv(math_train, strata = "srt_tst_typ"))
+(cv_splits <- vfold_cv(math_train))
 ```
 
 ```{r}

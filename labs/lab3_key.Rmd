@@ -8,18 +8,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
-library(rio)
 library(tidymodels)
 ```
 
-Read in the `state-test-simulated` data.
+Read in the `train.csv` data.
 
 ```{r, data}
-math <- import("C:/Users/jnese/Desktop/BRT/Teaching/Predictive-Modeling/c4-ml-2020/c4-ml-2020/data/state-test-simulated.csv") %>% 
+math <- read_csv(here::here("data", "edld-654-spring-2020", "train.csv")) %>% 
   as_tibble() 
 
 math <- math %>% 
-  drop_na(lat) 
+  drop_na(lat, econ_dsvntg) %>% 
+  mutate(enrl_grd = factor(enrl_grd))
+
 ```
 
 
@@ -38,12 +39,12 @@ math_test  <- testing(math_split)
 
 2. Resample
 
-Use 10-fold cross-validation to resample the traning data, stratifying by `srt_tst_typ`.
+Use 10-fold cross-validation to resample the traning data.
 
 ```{r, resample}
 
 set.seed(3000)
-cv_folds <- vfold_cv(math_train, strata = "srt_tst_typ")
+cv_folds <- vfold_cv(math_train)
 ```
 
 3. Preprocess
@@ -55,13 +56,16 @@ Create a recipe object that includes:
 
 ```{r, preprocess}
 
+prop.table(table(math_train$enrl_grd, useNA = "always"))
+
 lasso4_rec <- 
   recipe(
-    score ~ enrl_grd + srt_tst_typ + lat + lon, 
+    score ~ enrl_grd + econ_dsvntg + lat + lon, 
     data = math_train
   ) %>%
-  step_dummy(all_nominal()) %>%
-  step_normalize(all_numeric()) 
+  step_string2factor(econ_dsvntg) %>% 
+  step_dummy(enrl_grd, econ_dsvntg) %>%
+  step_normalize(lat, lon) 
 ```
 
 4. Parsnip model
@@ -94,7 +98,7 @@ lasso_grid <- grid_regular(penalty())
 #                                     save_pred = TRUE)
 # )
 
-lasso_fit_1 <- tune_grid(
+lasso4_fit_1 <- tune_grid(
   mod_lasso, 
   preprocessor = lasso4_rec,
   resamples = cv_folds,
@@ -102,26 +106,27 @@ lasso_fit_1 <- tune_grid(
   control = tune::control_resamples(verbose = TRUE,
                                     save_pred = TRUE)
 )
+
 ```
 
 * Question A
-  + How many models were fit to each fold of `lasso_fit_1`? (Please provide a numeric answer, *and* use code to corroborate your answer.)
+  + How many models were fit to each fold of `lasso4_fit_1`? (Please provide a numeric answer, *and* use code to corroborate your answer.)
 ```{r}
 # 3 models for each fold
 
-lasso_fit_1 %>% 
+lasso4_fit_1 %>% 
   collect_metrics() %>% 
   filter(`.metric` == "rmse") %>% 
   nrow()
 # OR
-lasso_fit_1$.metrics[[1]]
+lasso4_fit_1$.metrics[[1]]
 ```
 
   + Use code to list the different values of `penalty()` that were used.
 
 ```{r}
 
-lasso_fit_1 %>% 
+lasso4_fit_1 %>% 
   collect_metrics() %>% 
   filter(`.metric` == "rmse") %>% 
   select(penalty)
@@ -133,16 +138,15 @@ Use your code from (7) above to complete the code maze below to fit a second tun
 
 ```{r, lasso_fit_2}
 
-# lasso_fit_2 <- tune_grid(
+# lasso4_fit_2 <- tune_grid(
 #   ____, 
 #   preprocessor = ____,
 #   resamples = ____,
-#   metrics = yardstick::metric_set(rmse),
 #   control = tune::control_resamples(verbose = TRUE,
 #                                     save_pred = TRUE)
 # )
 
-lasso_fit_2 <- tune_grid(
+lasso4_fit_2 <- tune_grid(
   mod_lasso,
   preprocessor = lasso4_rec,
   resamples = cv_folds,
@@ -153,27 +157,28 @@ lasso_fit_2 <- tune_grid(
 
 * Question B
 
-  + How many models were fit to each fold of `lasso_fit_2`? (Please provide a numeric answer, *and* use code to corroborate your answer.)
+  + How many models were fit to each fold of `lasso4_fit_2`? (Please provide a numeric answer, *and* use code to corroborate your answer.)
 
 ```{r}
 # 10 models for each fold
 
-lasso_fit_2 %>% 
+lasso4_fit_2 %>% 
   collect_metrics() %>% 
   filter(`.metric` == "rmse") %>% 
   nrow()
 # OR
-lasso_fit_2$.metrics[[1]] %>% 
+lasso4_fit_2$.metrics[[1]] %>% 
   filter(`.metric` == "rmse")
 ```
 
-  + If this is different than the number of models of `lasso_fit_1`, please explain why.
-**This is different because the default for** `grid_regular(penalty())` **has** `levels = 3`. **See** `?grid_regular()`. For *lasso_fit_2*, we used the default for `fit_resamples` which sets `grid = 10`.
+  + If this is different than the number of models of `lasso4_fit_1`, please explain why.
+
+<!-- **This is different because the default for** `grid_regular(penalty())` **has** `levels = 3`. **See** `?grid_regular()`. For *lasso4_fit_2*, we used the default for `fit_resamples` which sets `grid = 10`. -->
   
   + Use code to list the different values of `penalty()` that were used for *lasso_fit_2*.
 
 ```{r}
-lasso_fit_2 %>% 
+lasso4_fit_2 %>% 
   collect_metrics() %>% 
   filter(`.metric` == "rmse") %>% 
   select(penalty)
@@ -183,20 +188,18 @@ lasso_fit_2 %>%
 
 ```{r, lasso8}
 
-lasso_rec8 <- 
+lasso7_rec <- 
   recipe(
-    score ~ enrl_grd + srt_tst_typ + lat + lon + sp_ed_fg + econ_dsvntg + gndr, 
+    score ~ enrl_grd + econ_dsvntg + lat + lon + sp_ed_fg + gndr + dist_sped, 
     data = math_train
   ) %>%
-  step_naomit(everything()) %>%
-  step_dummy(all_nominal()) %>%
-  step_normalize(all_numeric()) %>%
-  prep() %>% 
-  juice() %>% View()
+  step_string2factor(econ_dsvntg, sp_ed_fg, gndr, dist_sped) %>% 
+  step_dummy(enrl_grd, econ_dsvntg, sp_ed_fg, gndr, dist_sped) %>% 
+  step_normalize(lat, lon) 
 
-lasso_fit_8 <- tune_grid(
+lasso7_fit <- tune_grid(
   mod_lasso,
-  preprocessor = lasso_rec8,
+  preprocessor = lasso7_rec,
   resamples = cv_folds,
   control = tune::control_resamples(verbose = TRUE,
                                     save_pred = TRUE)
@@ -204,17 +207,51 @@ lasso_fit_8 <- tune_grid(
 
 ```
 
-10. Compare the metrics from the lasso model with 4 predictors to the lasso model with 7+ predicors. Which is best?
+10. Compare the metrics from the best lasso model with 4 predictors to the best lasso model with 7+ predicors. Which is best?
 
 ```{r}
+lasso4_fit_1 %>% 
+  show_best(metric = "rmse", n = 1)
 
+lasso4_fit_2 %>% 
+  show_best(metric = "rmse", n = 1)
+
+lasso7_fit %>% 
+  show_best(metric = "rmse", n = 1)
+
+#Model with 7 predictors
 ```
 
 11. Fit a tuned elastic net model with the same predictors from (9). 
   + Create a new `{parsnip}` model
   + Use the same recipe from (9) above
   + Create and apply a regular grid for the elastic net model
-  + Compare the metrics from the elastic net model to the lasso model from (9). Which would you choose for your final model? What are the best hyperparameters for that model?
+  + Compare the metrics from the elastic net model to the best lasso model from (10). Which would you choose for your final model? What are the best hyperparameters for that model?
 
+```{r}
+mod_enet <- linear_reg() %>%
+  set_engine("glmnet") %>% 
+  set_args(penalty = tune(),
+           mixture = tune())
+
+enet_grid <- grid_regular(penalty(), mixture(), levels = c(3, 5))
+
+enet7_fit <- tune_grid(
+  mod_enet,
+  preprocessor = lasso7_rec,
+  resamples = cv_folds,
+  grid = enet_grid,
+  control = tune::control_resamples(verbose = TRUE,
+                                    save_pred = TRUE)
+)
+
+lasso7_fit %>% 
+  show_best(metric = "rsq", n = 1)
+
+enet7_fit %>% 
+  show_best(metric = "rsq", n = 1)
+
+#They're the same for both rmse and rsq, but the they hyperparameters are different. I'd choose with the lasso...
+```
 
 
