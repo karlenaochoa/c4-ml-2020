@@ -171,9 +171,9 @@ knn_rec_final <- knn_rec %>%
   finalize_recipe(knn_best)
 
 # Run your last fit on your initial data split
-knn_test_results <- knn_mod_final %>% 
-    last_fit(preprocessor = knn_rec_final,
-             split = ames_split)
+knn_test_results <- last_fit(knn_mod_final, 
+                             preprocessor = knn_rec_final,
+                             split = ames_split)
 
 #Collect metrics
 knn_test_results %>% 
