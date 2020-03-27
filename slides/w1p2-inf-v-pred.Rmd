@@ -30,6 +30,7 @@ theme_set(theme_minimal(base_size = 25))
 # Agenda 
 * Modeling for inference vs prediction
 
+
 --
 * Train and test datasets
 
@@ -265,12 +266,6 @@ care about which model performs best.
 use these models for inference 
   + Little to no theory guiding decisions, except which variables will be
     included in the automatic procedure (which is often all available variables)
-
----
-background-image: url(https://d1jnx9ba8s6j9r.cloudfront.net/blog/wp-content/uploads/2018/03/AI-vs-ML-vs-Deep-Learning.png)
-background-size: contain
-# The ML world
-
 
 ---
 class: inverse center middle
@@ -580,11 +575,23 @@ Why the linear model has low variance
 
 ![](img/linear.gif)
 
+
+---
+Why it may have high bias
+
+![](img/linear-sin.gif)
+
+
 ---
 # A crazy polynomial model
 Why more complicated models have higher variance
 ![](img/cray-poly.gif)
 
+
+---
+Why it may have lower bias
+
+![](img/cray-poly-sin.gif)
 
 ---
 class: inverse center middle
@@ -659,13 +666,13 @@ class: inverse center middle
 ---
 # Pop quiz
 
-`r countdown::countdown(minutes = 3, top = 0)`
+`r countdown::countdown(minutes = 5, top = 0)`
 
 <br/>
 
-Talk with your neighbor to determine whether each of the following is a .b[regression] or .r[classification] problem .bolder[AND] whether it is a .b[supervised] or .r[unsupervised] problem.
+Talk with your neighbor to determine whether each of the following is a .b[regression] or .r[classification] problem .bolder[AND] whether it is a .b[supervised] or .r[unsupervised] problem (or how it could be framed as one versus the other).
 
-* Develop an algorithm that determines of students will be reading on grade level by the third grade, according to a statewide test.
+* Develop an algorithm that determines if students will be reading on grade level by the third grade, according to a statewide test.
 * Predict which students will be at risk for reading difficulties.
 * Estimate who is most at risk to drop out of high school.
 * Determine objects in an image
