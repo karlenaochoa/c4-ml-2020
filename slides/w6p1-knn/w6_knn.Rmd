@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-library(rio)
+library(here)
 library(tidyverse)
 library(tidymodels)
 library(tune)
@@ -21,12 +21,13 @@ theme_set(theme_minimal())
 ```
 
 ```{r}
-math <- import("C:/Users/jnese/Desktop/BRT/Teaching/Predictive-Modeling/c4-ml-2020/c4-ml-2020/data/state-test-simulated.csv") %>% 
+
+math <- read_csv(here::here("data", "edld-654-spring-2020", "train.csv")) %>% 
   as_tibble()
 
 math <- math %>% 
   drop_na(lat) %>% 
-  mutate_at(vars(enrl_grd, srt_tst_typ), list(~as.factor(.))) %>% 
+  mutate_at(vars(enrl_grd), list(~as.factor(.))) %>% 
   mutate(classification = factor(classification)) %>% 
   sample_frac(size = .02)
 
@@ -36,7 +37,7 @@ math <- math %>%
 
 ```{r}
 set.seed(210)
-math_split <- initial_split(math, strata = "srt_tst_typ") 
+math_split <- initial_split(math) 
 
 math_train <- training(math_split)
 math_test  <- testing(math_split)
@@ -47,7 +48,7 @@ math_test  <- testing(math_split)
 
 ```{r}
 set.seed(210)
-math_cv <- vfold_cv(math_train, strata = "srt_tst_typ")
+math_cv <- vfold_cv(math_train)
 ```
 
 # 3 - Preprocess
@@ -56,11 +57,11 @@ math_cv <- vfold_cv(math_train, strata = "srt_tst_typ")
 ```{r}
 knn_reg_rec <- 
   recipe(
-    score ~ enrl_grd + srt_tst_typ + lat + lon, 
+    score ~ enrl_grd + lat + lon, 
     data = math_train
   ) %>%
-  step_dummy(recipes::all_nominal()) %>%
-  step_normalize(recipes::all_numeric()) 
+  step_dummy(enrl_grd) %>%
+  step_normalize(lat, lon) 
 ```
 
 # 4 - Set Model
@@ -122,15 +123,54 @@ knn_reg_res %>%
   show_best(metric = "rmse", n = 1)
 
 knn_reg_res %>% 
+  select_best(metric = "rmse")
+
+knn_reg_res %>% 
   autoplot() +
   geom_line()
 
 
 knn_reg_res %>% 
-  autoplot(metric = "rmse") +
-  geom_line()
+  autoplot(metric = "rmse")
 
 ```
+
+# Final fit
+```{r}
+# Select best tuning parameters
+knn_reg_best <- knn_reg_res %>%
+  select_best(metric = "rmse")
+
+# Finalize your model using the best tuning parameters
+knn_reg_mod_final <- knn_reg_mod %>%
+  finalize_model(knn_reg_best) 
+
+# Finalize your recipe using the best turning parameters
+knn_reg_rec_final <- knn_reg_rec %>% 
+  finalize_recipe(knn_reg_best)
+
+# Run your last fit on your initial data split
+cl <- makeCluster(8)
+registerDoParallel(cl)
+knn_reg_test_results <- last_fit(
+  knn_reg_mod_final, 
+  preprocessor = knn_reg_rec_final, 
+  split = math_split)
+stopCluster(cl)
+
+#Collect metrics
+knn_reg_test_results %>% 
+  collect_metrics()
+
+knn_reg_test_results %>% 
+  select(`.predictions`) %>% 
+  unnest(cols = `.predictions`) %>% 
+  mutate(resid_z = scale(`.pred` - score)) %>% 
+  ggplot(aes(`.pred`, resid_z)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "steelblue")
+```
+
 
 ## Let's look at a regular grid
 ```{r}
@@ -138,6 +178,7 @@ knn_params <- parameters(neighbors(), weight_func())
 knn_reg_grid <- grid_regular(neighbors(), weight_func(), levels = c(15, 5))
 dim(knn_reg_grid)
 
+str(knn_params)
 
 knn_reg_grid %>% 
   ggplot(aes(neighbors, weight_func)) +
@@ -145,11 +186,30 @@ knn_reg_grid %>%
   scale_x_continuous(breaks = c(1:15))
 ```
 
+## Uuse the arguments within the hyperparameters
+```{r}
+?neighbors()
+?weight_func()
+values_weight_func
+knn_params <- parameters(neighbors(range = c(1, 15)), 
+                         weight_func(values = values_weight_func[1:5]))
+
+knn_reg_grid <- grid_regular(knn_params, levels = c(15, 5))
+
+knn_reg_grid %>% 
+  ggplot(aes(neighbors, weight_func)) +
+  geom_point()
+
+                        
+                         
+```
+
+
 ## Let's make a regular grid by hand
 ```{r}
 knn_reg_grid_man <- expand.grid(
   neighbors = c(1:15), 
-  weight_func = weight_func()$values[1:5]
+  weight_func = values_weight_func[1:5]
   )
 
 knn_reg_grid_man %>% 
@@ -208,10 +268,10 @@ knn_lhs %>%
 ```{r}
 knn_clas_rec <- 
   recipe(
-    classification ~ enrl_grd + srt_tst_typ + lat + lon, 
+    classification ~ enrl_grd + lat + lon, 
     data = math_train
   ) %>%
-  step_dummy(enrl_grd, srt_tst_typ)
+  step_dummy(enrl_grd)
 ```
 
 # Set Model
@@ -228,7 +288,7 @@ knn_clas_mod <- nearest_neighbor() %>%
 # Use an SFD grid
 ```{r}
 knn_params <- parameters(neighbors(), weight_func())
-(knn_sfd <- grid_max_entropy(knn_params, size = 50))
+knn_sfd <- grid_max_entropy(knn_params, size = 50)
 ```
 
 
@@ -260,11 +320,9 @@ knn_clas_res %>%
   show_best(metric = "roc_auc", n = 5)
 
 knn_clas_res %>% 
-  autoplot(metric = "roc_auc") +
-  geom_line()
+  autoplot(metric = "roc_auc") 
 
 ```
-
 
 ```{r}
 
@@ -283,5 +341,7 @@ knn_reg_res %>%
   facet_grid(`.metric` ~ tunes, scales = "free_x")
 
 ```
+
+
 
 

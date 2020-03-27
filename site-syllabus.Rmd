@@ -44,10 +44,10 @@ instructor.
 ## Books (required)
 * Bohemke, B. & Greenwell, B. (2019). [Hands on Machine Learning with R](https://bradleyboehmke.github.io/HOML/). New York, NY: Taylor & Francis.
 * James, Gareth et. al. (2017). [An Introduction to Statistical Learning with R](http://faculty.marshall.usc.edu/gareth-james/ISL/). New York, NY: Springer.
+* Kuhn, M and Johnson, Kjell (2014). Applied Predictive Modeling in R, New York, NY: Springer.
 * Kuhn M., & Johnson, K. (2019). [Feature Engineering and Selection: A Practical Approach for Predictive Models](http://www.feat.engineering). New York, NY: Taylor & Francis.
 
 ## Books (not required, but possibly helpful)
-* Kuhn, M and Johnson, Kjell (2014). Applied Predictive Modeling in R, New York, NY: Springer.
 * Efron, B. & Hastie, T. (2016). [Computer age statistical inference](http://web.stanford.edu/~hastie/CASI/). Cambridge, England: Cambridge University Press.
 * Hastie, T., Tibshirani, R., & Friedman, J. (2009). [The elements of statistical learning: Data mining, inference, and prediction](https://web.stanford.edu/~hastie/ElemStatLearn/). New York, NY: Springer.
 * Hadley Wickham & Garrett Grolemund, [R for Data Science: Import, Tidy, Transform, Visualize, and Model Data](https://r4ds.had.co.nz)
@@ -98,6 +98,8 @@ At least three models must be fit to the data. Describe each model fit, why the 
 
 #### Model fits (25 points)
 Describe your model fitting procedure(s) and the results of your model evaluation. Compare and contrast the different fits, including a discussion of model performance. Share code to communicate your procedures, and discuss your final model selection and the evidence that led you to this selection.
+
+You will also need to submit your final model predictions from your final model so that a quantitative indicator of prediction accuracy can be provided.
 
 #### Data visualization (10 points)
 Include at least two plots (you may include more) to help communicate your findings. The plots may be of initial data explorations, fits of individual models, and/or plots displaying competing model performance. 

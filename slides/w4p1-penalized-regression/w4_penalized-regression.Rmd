@@ -20,19 +20,20 @@ theme_set(theme_minimal())
 ```
 
 ```{r}
-math <- import("C:/Users/jnese/Desktop/BRT/Teaching/Predictive-Modeling/c4-ml-2020/c4-ml-2020/data/state-test-simulated.csv") %>% 
+math <- math <- read_csv(here::here("data", "edld-654-spring-2020", "train.csv")) %>% 
   as_tibble()
 
 math <- math %>% 
-  drop_na(lat) %>% 
-  mutate_at(vars(enrl_grd, srt_tst_typ), list(~as.factor(.)))
+  drop_na(lat, econ_dsvntg) %>% 
+  mutate_at(vars(enrl_grd, econ_dsvntg), list(~as.factor(.)))
+
 ```
 
 # 1 - Initial Split
 
 ```{r}
 set.seed(210)
-math_split <- initial_split(math, strata = "srt_tst_typ") 
+math_split <- initial_split(math) 
 
 math_train <- training(math_split)
 math_test  <- testing(math_split)
@@ -42,20 +43,20 @@ math_test  <- testing(math_split)
 
 ```{r}
 set.seed(210)
-cv_splits <- vfold_cv(math_train, strata = "srt_tst_typ")
+cv_splits <- vfold_cv(math_train)
 ```
 
 #  Preprocess
 ## Center and scale all predictors
 
 ```{r}
-stdz_rec <- 
+penreg_rec <- 
   recipe(
-    score ~ enrl_grd + srt_tst_typ + lat + lon, 
+    score ~ enrl_grd + econ_dsvntg + lat + lon, 
     data = math_train
   ) %>%
   step_dummy(all_nominal()) %>%
-  step_normalize(all_numeric()) 
+  step_normalize(lat, lon) 
 ```
 
 # 3 - Set Model
@@ -95,7 +96,7 @@ mod_enet <- linear_reg() %>%
 
 fit_ridge <- tune::fit_resamples(
   mod_ridge,
-  preprocessor = stdz_rec,
+  preprocessor = penreg_rec,
   resamples = cv_splits,
   metrics = yardstick::metric_set(rmse),
   control = tune::control_resamples(verbose = TRUE,
@@ -105,13 +106,17 @@ fit_ridge <- tune::fit_resamples(
 fit_ridge %>% 
   collect_metrics()
 
+fit_ridge %>% 
+ tune::collect_metrics(summarize = FALSE)
+
+
 ```
 
 ## lasso
 ```{r}
 fit_lasso <- fit_resamples(
   mod_lasso,
-  preprocessor = stdz_rec,
+  preprocessor = penreg_rec,
   cv_splits,
   metrics = yardstick::metric_set(rmse),
   control = control_grid(verbose = TRUE,
@@ -127,7 +132,7 @@ fit_lasso %>%
 ```{r}
 fit_enet <- fit_resamples(
   mod_enet,
-  preprocessor = stdz_rec,
+  preprocessor = penreg_rec,
   cv_splits,
   metrics = metric_set(rmse),
   control = control_grid(verbose = TRUE,
@@ -148,27 +153,27 @@ collect_metrics(fit_enet)
 # 5 - Tune
 ## Ridge
 ```{r}
-tnr_ridge <- linear_reg() %>%
+ridge_tune_mod <- linear_reg() %>%
   set_engine("glmnet") %>% 
   set_args(penalty = tune(), 
            mixture = 0)
 
-pr_grid <- grid_regular(penalty(), levels = 10)
+penreg_grid <- grid_regular(penalty(), levels = 10)
 ```
 
 ```{r}
 
-tnr_ridge_results <- tune::tune_grid(
-  tnr_ridge,
-  stdz_rec,
+ridge_tune_mod_results <- tune::tune_grid(
+  ridge_tune_mod,
+  penreg_rec,
   resamples = cv_splits,
-  grid = pr_grid,
+  grid = penreg_grid,
   metrics = yardstick::metric_set(rmse),
   control = tune::control_resamples(verbose = TRUE,
                                     save_pred = TRUE)
 )
 
-tnr_ridge_results %>% 
+ridge_tune_mod_results %>% 
   collect_metrics()
 
 ```
@@ -179,26 +184,26 @@ tnr_ridge_results %>%
 
 (enet_params <- parameters(penalty(), mixture()))
 (enet_grid <- grid_regular(enet_params, levels = c(10, 5)))
-
+options(scipen = 999)
 unique(enet_grid$penalty)
 unique(enet_grid$mixture)
 
 enet_grid %>% 
   ggplot(aes(penalty, mixture, color = factor(penalty))) +
-  geom_point()# + 
-  #geom_jitter()
+  geom_point() + 
+  geom_jitter()
 ```
 
 ```{r}
 
-tnr_enet <- linear_reg() %>%
+enet_tune_mod <- linear_reg() %>%
   set_engine("glmnet") %>% 
   set_args(penalty = tune(), 
            mixture = tune())
 
-tnr_enet_results <- tune_grid(
-  tnr_enet,
-  preprocessor = stdz_rec,
+enet_tune_mod_results <- tune_grid(
+  enet_tune_mod,
+  preprocessor = penreg_rec,
   resamples = cv_splits,
   grid = enet_grid,
 #  metrics = yardstick::metric_set(rmse),
@@ -206,12 +211,12 @@ tnr_enet_results <- tune_grid(
                                     save_pred = TRUE)
 )
 
-collect_metrics(tnr_enet_results)
+collect_metrics(enet_tune_mod_results)
 
-tnr_enet_results %>%
+enet_tune_mod_results %>%
   show_best(metric = "rmse", n = 5)
 
-tnr_enet_results %>%
+enet_tune_mod_results %>%
   select_best(metric = "rmse")
 
 ```
@@ -219,21 +224,22 @@ tnr_enet_results %>%
 # 6 - Final fit
 ```{r}
 # Select best tuning parameters
-enet_best <- tnr_enet_results %>%
+enet_best <- enet_tune_mod_results %>%
   select_best(metric = "rmse")
 
 # Finalize your model using the best tuning parameters
-enet_mod_final <- tnr_enet %>%
+enet_mod_final <- enet_tune_mod %>%
   finalize_model(enet_best) 
 
 # Finalize your recipe using the best turning parameters
-enet_rec_final <- stdz_rec %>% 
+enet_rec_final <- penreg_rec %>% 
   finalize_recipe(enet_best)
 
 # Run your last fit on your initial data split
-enet_test_results <- enet_mod_final %>% 
-    last_fit(preprocessor = enet_rec_final,
-             split = math_split)
+enet_test_results <- last_fit(
+  enet_mod_final, 
+  preprocessor = enet_rec_final, 
+  split = math_split)
 
 #Collect metrics
 enet_test_results %>% 
@@ -243,17 +249,13 @@ enet_test_results %>%
 ```
 
 ```{r}
-show_best(tnr_enet_results, metric = "rmse", n = 1) %>% 
-  bind_rows(show_best(tnr_enet_results, metric = "rsq", n = 1)) %>% 
+show_best(enet_tune_mod_results, metric = "rmse", n = 1) %>% 
+  bind_rows(show_best(enet_tune_mod_results, metric = "rsq", n = 1)) %>% 
   select(`.metric`, `.estimator`, mean)
-```
 
-```{r}
 enet_test_results %>% 
-  collect_predictions() %>% 
-  rmse(truth = score, estimate = .pred) %>% 
-  autoplot()
+   collect_metrics()
 
-?roc_curve
 ```
+
 
