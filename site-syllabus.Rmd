@@ -9,7 +9,7 @@ output:
 ## EDLD 610: Applied Machine Learning for Educational Data Scientists (CRN: 37108; 3 credit hours)
 * **Term:** Spring 2020
 * **Time:** 12:00 - 1:20
-* **Classroom:** Zoom
+* **Classroom:** [Zoom](https://uoregon.zoom.us/j/391475566) (meeting ID: 391-475-566)
 * **Instructors:** 
 	* Joseph Nese, PhD
 		- *email:* (preferred contact method) [jnese@uoregon.edu](mailto:jnese@uoregon.edu)
