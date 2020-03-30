@@ -1,3 +1,5 @@
+.ital {font-style: italic;}
+
 table {
 	font-size: 1.1rem;
 }
@@ -17,7 +19,13 @@ table {
 .r {
   color: #de4fbf;
 }
+.g {
+  color: #98a2ae;
+}
 
+.small {
+  font-size: 0.75rem;
+}
 .remark-code-line-highlighted { 
 	background-color: #3bac39; 
 	color: #fff; 
@@ -26,4 +34,26 @@ table {
 
 .remark-code-line-highlighted .hljs-string {
 	color: #FFF200 !important;
+}
+
+.remark-code-line-highlighted .hljs-literal {
+  color: #f486cb !important;
+  font-weight: 400;
+}
+
+.bolder { font-weight: 900; }
+
+.major-emph-green {
+  display: block;
+  text-align: center;
+  font-family: 'Philosopher', sans-serif;
+  width: 110%;
+  background-color: #007935;
+  color: #eee;
+  border-top: 3px solid #FEE11A;
+  border-bottom: 3px solid #FEE11A;
+  padding: 10px 50px;
+  margin: 0px -100px 0px;
+  font-weight: bolder;
+  font-size: 175%;
 }
