@@ -1058,32 +1058,6 @@ vip_1b
 Numbers view of the previous plot
 
 ---
-
-```r
-vip_1b 
-```
-
-```
-## # A tibble: 48 x 3
-##    Variable     Importance Sign 
-##    &lt;chr&gt;             &lt;dbl&gt; &lt;chr&gt;
-##  1 tag_ed_fgY    117.4957  POS  
-##  2 sp_ed_fgY     109.1892  NEG  
-##  3 econ_dsvntgY   77.75669 NEG  
-##  4 ethnic_cdB     44.59635 NEG  
-##  5 ethnic_cdH     39.03411 NEG  
-##  6 tst_dt         34.35133 POS  
-##  7 ethnic_cdW     26.76342 NEG  
-##  8 ethnic_cdM     23.95652 NEG  
-##  9 ethnic_cdI     22.80560 NEG  
-## 10 ethnic_cdP     21.52754 NEG  
-## # … with 38 more rows
-```
-
---
-So it appears tag, sped, economic disadvantage, test date, and ethnic code are most important
-
----
 # Interactions
 You can also use vip with interactions
 
@@ -1165,6 +1139,7 @@ m3 %&gt;%
 * Nonlinearity?
   + `step_poly`
 
+
 --
 ### Refining the model
 * We have quite a bit of repeated code here. If this were the strategy we were using, we'd probably want to write functions for the model comparisons.
@@ -1176,7 +1151,7 @@ m3 %&gt;%
 
 Try to refine this model further to boost model performance more! Consider modifications listed in previous slide (inclusion of other variables, nonlinear terms, or interactions)
 
-<div class="countdown" id="timer_5e821d7b" style="top:0.5;right:0.5;bottom:0.5;left:0.75;" data-warnwhen="0">
+<div class="countdown" id="timer_5e827554" style="top:0.5;right:0.5;bottom:0.5;left:0.75;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">10</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 
@@ -1328,7 +1303,9 @@ class: inverse center middle
 
 --
 
-.center[For regression problems]
+.Large[.center[For regression problems]]
+
+--
 
 .pull-left[
 ### Well known metrics
@@ -1346,6 +1323,8 @@ class: inverse center middle
 * RPIQ - ratio of performance to inter-quartile
 * Huber loss - balances MSE and MAE
 ]
+
+--
 
 see [yardstick documentation](https://tidymodels.github.io/yardstick/reference/index.html) for complete reference of metrics implemented.
 
