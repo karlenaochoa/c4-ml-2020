@@ -101,7 +101,7 @@ Focus of most stats classes is on inference
 # Another way to think of it
 ### Our linear regression model
 
-$$\color{#157CAE}{\text{Y}_{i}} = \text{X}_{i} \color{#DB1593}{\beta} + u_i$$
+$$\color{#157CAE}{\text{Y}_{i}} = \text{X}_{i} \color{#DB1593}{\beta} + e_i$$
 
 
 --
@@ -247,8 +247,9 @@ for the given problem?
 
 --
 ### Why are we talking about this?
-* The only reason I mention any of this is to make you aware that others may do
-it, and to caution you (in the strongest way possible) not to do this.
+* It actually can still be an okay method if all you care about is variable selection. 
+
+* Make you aware that others may use it inappropriately, and to caution you (in the strongest way possible) not to use it for inference.
 
 ---
 # Stepwise criteria
@@ -277,7 +278,7 @@ class: inverse center middle
 
 --
 
-.center[### How close our predictions are, on average?]
+.center[### How close our predictions to the observed data?]
 
 
 --
@@ -288,13 +289,12 @@ class: inverse center middle
 
 --
 ### No! 
-* Why? We want to know how far off our model is, on average, for .bolder[cases
-  outside our sample!]
+* Why? We want to know how far off our model is for .bolder[.b[cases outside our sample]!]
 
 ---
 # Test/Train datasets
 
-* Our goal is to maximize .bolder[out-of-sample] predictive accuracy. How can 
+* Our goal is to maximize .bolder[.b[out-of-sample]] predictive accuracy. How can 
   we get an estimate of that? Leave out part of the sample.
 
 --
@@ -372,12 +372,7 @@ height="175px" />
 # What do we do?
 
 --
-* Square them
-
-
---
-* Average the squared values
-
+* Square then average the values
 
 --
 ### Mean square error
