@@ -215,6 +215,8 @@ prep(rec)
 ## Error in `contrasts&lt;-`(`*tmp*`, value = contr.funs[1 + isOF[nn]]): contrasts can be applied only to factors with 2 or more levels
 ```
 
+* You can't see the full error code, but basically it's complaining because (at least) one of the variables only has one level.
+
 ---
 # Filter
 * Remove zero variance predictors
@@ -256,8 +258,9 @@ prep(rec)
 ## Error in `contrasts&lt;-`(`*tmp*`, value = contr.funs[1 + isOF[nn]]): contrasts can be applied only to factors with 2 or more levels
 ```
 
----
-# Why doesn't this work?
+
+--
+### Why doesn't this work?
 
 * I think it's a bug (and I [filed an issue](https://github.com/tidymodels/recipes/issues/486) describing this).
 
@@ -315,8 +318,8 @@ train %&gt;%
 ## # A tibble: 2 x 2
 ##   lang_cd      n
 ##   &lt;chr&gt;    &lt;int&gt;
-## 1 S         3270
-## 2 &lt;NA&gt;    138800
+## 1 S         3232
+## 2 &lt;NA&gt;    138838
 ```
 
 ```r
@@ -345,70 +348,70 @@ rec %&gt;%
 ```
 
 ```
-## # A tibble: 142,070 x 122
+## # A tibble: 142,070 x 125
 ##       id attnd_dist_inst_id attnd_schl_inst_id enrl_grd partic_dist_inst_id
 ##    &lt;dbl&gt;              &lt;dbl&gt;              &lt;dbl&gt;    &lt;dbl&gt;               &lt;dbl&gt;
-##  1     3               1995               3400        8                1995
-##  2     7               1964                191        8                1964
-##  3    10               1948                184        8                1948
-##  4    12               1924                 84        8                1924
+##  1     1               2142               1330        6                2142
+##  2     3               1995               3400        8                1995
+##  3     7               1964                191        8                1964
+##  4    10               1948                184        8                1948
 ##  5    13               1947               4396        8                1947
-##  6    17               1966                208        8                1966
-##  7    18               1965                201        8                1965
-##  8    21               1948                184        8                1948
-##  9    22               1945                168        8                1945
-## 10    24               2243               1182        8                2243
-## # … with 142,060 more rows, and 117 more variables: partic_schl_inst_id &lt;dbl&gt;,
+##  6    14               1965                201        8                1965
+##  7    16               1945                168        8                1945
+##  8    17               1966                208        8                1966
+##  9    18               1965                201        8                1965
+## 10    22               1945                168        8                1945
+## # … with 142,060 more rows, and 120 more variables: partic_schl_inst_id &lt;dbl&gt;,
 ## #   ncessch &lt;dbl&gt;, lat &lt;dbl&gt;, lon &lt;dbl&gt;, score &lt;dbl&gt;, gndr_M &lt;dbl&gt;,
 ## #   ethnic_cd_B &lt;dbl&gt;, ethnic_cd_H &lt;dbl&gt;, ethnic_cd_I &lt;dbl&gt;, ethnic_cd_M &lt;dbl&gt;,
 ## #   ethnic_cd_P &lt;dbl&gt;, ethnic_cd_W &lt;dbl&gt;, tst_bnch_X2B &lt;dbl&gt;,
 ## #   tst_bnch_X3B &lt;dbl&gt;, tst_bnch_G4 &lt;dbl&gt;, tst_bnch_G6 &lt;dbl&gt;,
 ## #   tst_bnch_G7 &lt;dbl&gt;, tst_dt_X2.26.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X2.6.2018.0.00.00 &lt;dbl&gt;, tst_dt_X2.7.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X2.28.2018.0.00.00 &lt;dbl&gt;, tst_dt_X2.6.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X2.7.2018.0.00.00 &lt;dbl&gt;, tst_dt_X2.8.2018.0.00.00 &lt;dbl&gt;,
 ## #   tst_dt_X3.13.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.14.2018.0.00.00 &lt;dbl&gt;,
 ## #   tst_dt_X3.15.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.16.2018.0.00.00 &lt;dbl&gt;,
 ## #   tst_dt_X3.19.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.20.2018.0.00.00 &lt;dbl&gt;,
 ## #   tst_dt_X3.21.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.22.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X3.23.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.27.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X3.5.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.6.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X3.7.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.8.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X3.9.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.10.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.11.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.12.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.13.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.16.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.17.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.18.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.19.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.2.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.20.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.23.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.24.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.25.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.26.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.27.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.3.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.30.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.4.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.5.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X4.6.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.9.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.1.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.10.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.11.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.14.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.15.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.16.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.17.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.18.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.2.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.21.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.22.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.23.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.24.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.25.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.29.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.3.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.30.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.31.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.4.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.7.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X5.8.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.9.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X6.1.2018.0.00.00 &lt;dbl&gt;, tst_dt_X6.4.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X6.5.2018.0.00.00 &lt;dbl&gt;, tst_dt_X6.6.2018.0.00.00 &lt;dbl&gt;,
-## #   tst_dt_X6.7.2018.0.00.00 &lt;dbl&gt;, tst_dt_X6.8.2018.0.00.00 &lt;dbl&gt;,
-## #   migrant_ed_fg_Y &lt;dbl&gt;, ind_ed_fg_y &lt;dbl&gt;, ind_ed_fg_Y &lt;dbl&gt;,
-## #   sp_ed_fg_Y &lt;dbl&gt;, tag_ed_fg_Y &lt;dbl&gt;, econ_dsvntg_Y &lt;dbl&gt;, ayp_lep_B &lt;dbl&gt;,
-## #   ayp_lep_E &lt;dbl&gt;, ayp_lep_F &lt;dbl&gt;, ayp_lep_M &lt;dbl&gt;, ayp_lep_N &lt;dbl&gt;,
-## #   ayp_lep_S &lt;dbl&gt;, ayp_lep_W &lt;dbl&gt;, ayp_lep_X &lt;dbl&gt;, ayp_lep_Y &lt;dbl&gt;,
-## #   stay_in_dist_Y &lt;dbl&gt;, …
+## #   tst_dt_X3.23.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.26.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X3.27.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.5.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X3.6.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.7.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X3.8.2018.0.00.00 &lt;dbl&gt;, tst_dt_X3.9.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.10.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.11.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.12.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.13.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.16.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.17.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.18.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.19.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.2.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.20.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.23.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.24.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.25.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.26.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.27.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.3.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.30.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.4.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.5.2018.0.00.00 &lt;dbl&gt;, tst_dt_X4.6.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X4.9.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.1.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.10.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.11.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.14.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.15.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.16.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.17.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.18.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.2.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.21.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.22.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.23.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.24.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.25.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.29.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.3.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.30.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.31.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.4.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.7.2018.0.00.00 &lt;dbl&gt;, tst_dt_X5.8.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X5.9.2018.0.00.00 &lt;dbl&gt;, tst_dt_X6.1.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X6.4.2018.0.00.00 &lt;dbl&gt;, tst_dt_X6.5.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X6.6.2018.0.00.00 &lt;dbl&gt;, tst_dt_X6.7.2018.0.00.00 &lt;dbl&gt;,
+## #   tst_dt_X6.8.2018.0.00.00 &lt;dbl&gt;, migrant_ed_fg_Y &lt;dbl&gt;, ind_ed_fg_y &lt;dbl&gt;,
+## #   ind_ed_fg_Y &lt;dbl&gt;, sp_ed_fg_Y &lt;dbl&gt;, tag_ed_fg_Y &lt;dbl&gt;,
+## #   econ_dsvntg_Y &lt;dbl&gt;, ayp_lep_B &lt;dbl&gt;, ayp_lep_E &lt;dbl&gt;, ayp_lep_F &lt;dbl&gt;,
+## #   ayp_lep_M &lt;dbl&gt;, ayp_lep_N &lt;dbl&gt;, ayp_lep_S &lt;dbl&gt;, ayp_lep_W &lt;dbl&gt;, …
 ```
 
 ---
 # A problem
-* Our data variable was read in as a string. Let's fix that. 
+* Our date variable was read in as a string. Let's fix that. 
 
-.b[Note]: We could do this inside or out of the recipe, it doesn't really matter, but doing it as part of the recipe will make for easier transportability to the test dataset.
+.b[Note]: We could do this inside or outside of the recipe, it doesn't really matter, but doing it as part of the recipe will make for easier transportability to the test dataset.
 
 
 ```r
@@ -431,16 +434,16 @@ rec %&gt;%
 ## # A tibble: 142,070 x 56
 ##       id attnd_dist_inst_id attnd_schl_inst_id enrl_grd tst_dt             
 ##    &lt;dbl&gt;              &lt;dbl&gt;              &lt;dbl&gt;    &lt;dbl&gt; &lt;dttm&gt;             
-##  1     3               1995               3400        8 2018-05-01 00:00:00
-##  2     7               1964                191        8 2018-05-22 00:00:00
-##  3    10               1948                184        8 2018-05-25 00:00:00
-##  4    12               1924                 84        8 2018-05-10 00:00:00
+##  1     1               2142               1330        6 2018-05-14 00:00:00
+##  2     3               1995               3400        8 2018-05-01 00:00:00
+##  3     7               1964                191        8 2018-05-22 00:00:00
+##  4    10               1948                184        8 2018-05-25 00:00:00
 ##  5    13               1947               4396        8 2018-05-09 00:00:00
-##  6    17               1966                208        8 2018-05-10 00:00:00
-##  7    18               1965                201        8 2018-05-15 00:00:00
-##  8    21               1948                184        8 2018-05-22 00:00:00
-##  9    22               1945                168        8 2018-05-23 00:00:00
-## 10    24               2243               1182        8 2018-05-23 00:00:00
+##  6    14               1965                201        8 2018-05-11 00:00:00
+##  7    16               1945                168        8 2018-05-24 00:00:00
+##  8    17               1966                208        8 2018-05-10 00:00:00
+##  9    18               1965                201        8 2018-05-15 00:00:00
+## 10    22               1945                168        8 2018-05-23 00:00:00
 ## # … with 142,060 more rows, and 51 more variables: partic_dist_inst_id &lt;dbl&gt;,
 ## #   partic_schl_inst_id &lt;dbl&gt;, ncessch &lt;dbl&gt;, lat &lt;dbl&gt;, lon &lt;dbl&gt;,
 ## #   score &lt;dbl&gt;, gndr_M &lt;dbl&gt;, ethnic_cd_B &lt;dbl&gt;, ethnic_cd_H &lt;dbl&gt;,
@@ -575,6 +578,10 @@ ethnicities
 train &lt;- left_join(train, ethnicities)
 ```
 
+```
+## Joining, by = "attnd_schl_inst_id"
+```
+
 ---
 # Center scale
 * It may make sense to center/scale these proportion variables
@@ -588,8 +595,8 @@ rec &lt;- recipe(score ~ ., train) %&gt;%
   step_mutate(tst_dt = lubridate::mdy_hms(tst_dt)) %&gt;% 
   update_role(contains("id"), ncessch, new_role = "id vars") %&gt;% 
   step_nzv(all_predictors(), freq_cut = 0, unique_cut = 0) %&gt;% 
-  step_center(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;% 
-  step_scale(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;% 
+* step_center(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;%
+* step_scale(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;%
   step_dummy(all_nominal())
 ```
 
@@ -610,7 +617,7 @@ prep(rec)
 ##    outcome          1
 ##  predictor         40
 ## 
-## Training data contained 142173 data points and 142173 incomplete rows. 
+## Training data contained 142187 data points and 142187 incomplete rows. 
 ## 
 ## Operations:
 ## 
@@ -644,8 +651,8 @@ class: inverse center middle
   
 ---
 # Deletion
-* Most straightforward, but the often dangerous
-  + Is the missgness systematic? (leading to systematic biases in your predictions)
+* Most straightforward, but  often dangerous
+  + Is the missingness systematic? (leading to systematic biases in your predictions)
   
 
 ```r
@@ -685,14 +692,6 @@ rec %&gt;%
 rec &lt;- recipe(score ~ ., train) %&gt;% 
   step_unknown(all_nominal())
 
-nrow(train)
-```
-
-```
-## [1] 142173
-```
-
-```r
 rec %&gt;% 
   prep() %&gt;% 
   bake(train) %&gt;% 
@@ -700,20 +699,20 @@ rec %&gt;%
 ```
 
 ```
-## # A tibble: 142,173 x 2
+## # A tibble: 142,187 x 2
 ##       id ayp_lep
 ##    &lt;dbl&gt; &lt;fct&gt;  
-##  1     3 unknown
-##  2     7 E      
-##  3    10 unknown
-##  4    12 N      
+##  1     1 X      
+##  2     3 unknown
+##  3     7 E      
+##  4    10 unknown
 ##  5    13 unknown
-##  6    17 unknown
-##  7    18 unknown
-##  8    21 unknown
-##  9    22 unknown
-## 10    24 unknown
-## # … with 142,163 more rows
+##  6    14 unknown
+##  7    16 unknown
+##  8    17 unknown
+##  9    18 unknown
+## 10    22 unknown
+## # … with 142,177 more rows
 ```
 
 ---
@@ -744,11 +743,11 @@ Alternatively, you can create a model .b[for] the missingness.
   
   + Time series rolling window imputation w/`step_rollimpute`
   
-    - by default provides a median imputation
+      - by default provides a median imputation
   
   + Lower bound imputation w/`step_lowerimpute`
   
- 
+
 --
 * More complicated
 
@@ -853,8 +852,8 @@ airquality_rec %&gt;%
 ##  2     118   8      72     5     2    36
 ##  3     149  12.6    74     5     3    12
 ##  4     313  11.5    62     5     4    18
-##  5     117  14.3    56     5     5    NA
-##  6     237  14.9    66     5     6    28
+##  5     107  14.3    56     5     5    NA
+##  6     244  14.9    66     5     6    28
 ##  7     299   8.6    65     5     7    23
 ##  8      99  13.8    59     5     8    19
 ##  9      19  20.1    61     5     9     8
@@ -881,11 +880,6 @@ airquality_rec %&gt;%
 class: inverse center middle
 # Transformations and other considerations
 
----
-# Types of transformations
-* Change the scale
-
-* Expand
 
 ---
 # An example
@@ -975,13 +969,16 @@ $$
 Estimate `\(\lambda\)` for each  variable to be transformed
 
 
+--
+Technically only for positive values. Use Yeo-Johnson transformation for positive &amp; negative data.
+
 ---
 # Common `\(\lambda\)` mappings
 
-* `\(\lambda = 1\)`: No tranformation
-* `\(\lambda = 0\)`: log tranformation
-* `\(\lambda = 0.5\)`: square root tranformation
-* `\(\lambda = -1\)`: inverse
+* `\(\color{#157CAE}{\lambda} = 1\)`: No tranformation
+* `\(\color{#157CAE}{\lambda} = 0\)`: log tranformation
+* `\(\color{#157CAE}{\lambda} = 0.5\)`: square root tranformation
+* `\(\color{#157CAE}{\lambda} = -1\)`: inverse
 
 
 --
@@ -999,36 +996,278 @@ tidy(bc, number = 1)
 ## # A tibble: 2 x 3
 ##   terms           value id          
 ##   &lt;chr&gt;           &lt;dbl&gt; &lt;chr&gt;       
-## 1 PredictorA -0.8571484 BoxCox_R1dOc
-## 2 PredictorB -1.091284  BoxCox_R1dOc
+## 1 PredictorA -0.8571484 BoxCox_BFdoj
+## 2 PredictorB -1.091284  BoxCox_BFdoj
 ```
+
 
 ---
 ## More complicated transformations
 * Nonlinear transformations may help improve performance
-  + polynomials
-  + splines
-  + hinges
+
+  + Polynomials w/`step_poly`
+
+      - Note, these are orthogonal polynomials by default 
+
+  + Natural- or B-spline basis functions w/`step_ns` or `step_bs`
+  
+      - If you're interested in splines, or more generally, GAMs, I highly recommend [Noam Ross's free course](https://noamross.github.io/gams-in-r-course/) to get you started.
+
 
 ---
-background-image: url(http://www.feat.engineering/figures/numeric-ames-mars-1.svg)
-background-size:cover
+# Quick example
+
+```r
+airquality &lt;- airquality %&gt;% 
+  mutate(date = lubridate::make_date(month = Month, day = Day))
+
+ggplot(airquality, aes(date, Temp)) +
+  geom_point(color = "gray70")
+```
+
+![](w5p1-feature-engineering_files/figure-html/plot-raw-1.png)&lt;!-- --&gt;
+
+
+---
+# Natural spline basis expansion
+
+
+```r
+spline_rec &lt;- recipe(Temp ~ ., airquality) %&gt;%
+  step_mutate(date = as.numeric(date)) %&gt;% 
+  step_ns(date) 
+
+spline_d &lt;- spline_rec %&gt;% 
+  prep() %&gt;% 
+  juice()
+```
+
+---
+# Fit model &amp; make prediction
+
+
+```r
+fit &lt;- lm(Temp ~ date_ns_1 + date_ns_2, data = spline_d)
+spline_pred &lt;- spline_d %&gt;% 
+  mutate(spline_pred = predict(fit, newdata = spline_d)) 
+
+spline_pred
+```
+
+```
+## # A tibble: 153 x 9
+##    Ozone Solar.R  Wind Month   Day  Temp  date_ns_1    date_ns_2 spline_pred
+##    &lt;int&gt;   &lt;int&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt;
+##  1    41     190   7.4     5     1    67 0           0              60.74215
+##  2    36     118   8       5     2    72 0.01004389 -0.006695549    61.17035
+##  3    12     149  12.6     5     3    74 0.02008509 -0.01338702     61.59844
+##  4    18     313  11.5     5     4    62 0.03012090 -0.02007035     62.02629
+##  5    NA      NA  14.3     5     5    56 0.04014863 -0.02674146     62.45378
+##  6    28      NA  14.9     5     6    66 0.05016559 -0.03339627     62.88078
+##  7    23     299   8.6     5     7    65 0.06016907 -0.04003070     63.30719
+##  8    19      99  13.8     5     8    59 0.07015639 -0.04664070     63.73289
+##  9     8      19  20.1     5     9    61 0.08012484 -0.05322217     64.15774
+## 10    NA     194   8.6     5    10    69 0.09007175 -0.05977105     64.58163
+## # … with 143 more rows
+```
+
+---
+# Plot predictions
+
+
+```r
+spline_pred %&gt;% 
+  mutate(date = lubridate::make_date(month = Month, day = Day)) %&gt;% 
+  ggplot(aes(date, Temp)) +
+  geom_point(color = "gray70") +
+  geom_line(aes(y = spline_pred),
+            color = "#4f8dde")
+```
+
+![](w5p1-feature-engineering_files/figure-html/plot-preds-1.png)&lt;!-- --&gt;
+
+---
+# Finishing up on splines
+* The default for `step_ns` is equivalent to `splines::ns(x, df = 2)`
+
+* Could easily be a course on its own (and is)
+
+* Really powerful and actually can be highly interpretable
+
+* Can be thought of as a feature engineering consideration (as it is through recipes) rather than a model fitting procedure alone
+
+* Splines themselves are on a predictor-by-predictor basis, but can be extended to multivariate models with GAMs
 
 ---
 # Collapsing data w/PCA
 * For some models (e.g., linear regression) highly correlated variables can reduce predictive accuracy. Collapsing variables may help.
 
-* Basically a way to take a whole bunch of variables and reduce them down to just a few, which carry most (if not essentially all) of the same information as the raw data
+* Basically a way to take a whole bunch of variables and reduce them down to just a few, which carry most of the same information as the raw data
 
-* May help reduce overfitting, but if this is your primary concern, regularizatoin methods are probably better
+* Can help reduce overfitting, but if this is your primary concern, regularizatoin methods are probably better
+
+--
+.bolder[.b[Goal]]: Identify a small number of dimensions (components) that account for .r[X].b[%] of the variation captured by .ital[.bolder[all]] of the variables
 
 ---
-# What is PCA?
+# Recipe steps to check
+* Data are [tidy](https://www.jstatsoft.org/article/view/v059i10) .g[Probs fix before recipe steps]
+
+* No missing data
+
+* All numeric data (so need to use dummy coding, etc)
+
+* Numeric data should be standardized (centered &amp; scaled)
+
+---
+# Get ready for PCA
+Note, this is the same recipe we had before, except I've encoded and imputed missing data
+
+```r
+rec &lt;- recipe(score ~ ., train) %&gt;% 
+  step_mutate(tst_dt = lubridate::mdy_hms(tst_dt)) %&gt;% 
+  update_role(contains("id"), sch_name, ncessch, new_role = "id vars") %&gt;% 
+  step_nzv(all_predictors(), freq_cut = 0, unique_cut = 0) %&gt;% 
+* step_unknown(all_nominal()) %&gt;%
+* step_medianimpute(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;%
+  step_center(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;% 
+  step_scale(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;% 
+  step_dummy(all_nominal(), -has_role("id vars"))
+```
 
 
 ---
-# Downsampling
-* Sometimes you have highly unbalanced data
+# Retain 80% of the variance
+
+
+```r
+rec %&gt;% 
+  step_pca(all_numeric(), -all_outcomes(), -has_role("id vars"), 
+           threshold = .80) %&gt;% 
+  prep() %&gt;% 
+  juice() %&gt;% 
+  select(id, starts_with("PC"), score)
+```
+
+```
+## # A tibble: 142,187 x 7
+##       id      PC1        PC2        PC3        PC4         PC5 score
+##    &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;
+##  1     1 3.912190 -3.671239   1.448022   0.2124920  1.659494    2340
+##  2     3 4.037360  2.227192  -0.5371773 -1.206262   1.791805    2551
+##  3     7 3.901656  1.549484  -0.7008401 -1.075605   2.368715    2417
+##  4    10 4.215254  0.6368587 -0.2505359 -1.568579   0.04774955  2620
+##  5    13 4.170535  1.386503   0.3242368 -1.772688  -0.3024784   2305
+##  6    14 4.218730  1.305871  -0.1019286 -1.216470   2.184753    2346
+##  7    16 4.171969  0.7539188 -0.6870029 -1.599537   0.1030893   2395
+##  8    17 4.187101  1.684824  -0.3270454 -1.273241   1.919880    2539
+##  9    18 4.185652  1.309170  -0.1053255 -1.221911   2.176364    2392
+## 10    22 4.158463  0.7469234 -0.6701712 -1.600878   0.1015258   2301
+## # … with 142,177 more rows
+```
+
+
+---
+### How many PCAs to retain 95% of the variance?
+
+
+```r
+rec %&gt;% 
+  step_pca(all_numeric(), -all_outcomes(), -has_role("id vars"), 
+           threshold = .95) %&gt;% 
+  prep() %&gt;% 
+  juice() %&gt;% 
+  select(id, starts_with("PC"), score)
+```
+
+```
+## # A tibble: 142,187 x 15
+##       id     PC01       PC02       PC03       PC04        PC05       PC06
+##    &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;
+##  1     1 3.912190 -3.671239   1.448022   0.2124920  1.659494   -0.2968687
+##  2     3 4.037360  2.227192  -0.5371773 -1.206262   1.791805   -0.1387631
+##  3     7 3.901656  1.549484  -0.7008401 -1.075605   2.368715    0.2807975
+##  4    10 4.215254  0.6368587 -0.2505359 -1.568579   0.04774955 -0.3808101
+##  5    13 4.170535  1.386503   0.3242368 -1.772688  -0.3024784  -0.6403855
+##  6    14 4.218730  1.305871  -0.1019286 -1.216470   2.184753    0.6288601
+##  7    16 4.171969  0.7539188 -0.6870029 -1.599537   0.1030893  -0.2148198
+##  8    17 4.187101  1.684824  -0.3270454 -1.273241   1.919880    0.3426671
+##  9    18 4.185652  1.309170  -0.1053255 -1.221911   2.176364    0.6230486
+## 10    22 4.158463  0.7469234 -0.6701712 -1.600878   0.1015258  -0.2201829
+## # … with 142,177 more rows, and 8 more variables: PC07 &lt;dbl&gt;, PC08 &lt;dbl&gt;,
+## #   PC09 &lt;dbl&gt;, PC10 &lt;dbl&gt;, PC11 &lt;dbl&gt;, PC12 &lt;dbl&gt;, PC13 &lt;dbl&gt;, score &lt;dbl&gt;
+```
+
+---
+class: inverse center middle
+# Wrapping up
+
+---
+# Feature engineering (FE)
+* Almost endless possibilities
+
+* Probably the most "art" part of ML
+
+* Amazing FE and a simple model will regularly beat poor FE and a fancy model
+
+* {recipes} is a great package to do a lot of the work for you
+
+--
+Remember - it creates a .b[blueprint]! This means, we can (and should) apply the model to each fold when we're using `\(k\)`-fold CV
+
+---
+# Full recipe
+### 95% of variance in PCA
+
+
+```r
+rec &lt;- recipe(score ~ ., train) %&gt;% 
+  step_mutate(tst_dt = lubridate::mdy_hms(tst_dt)) %&gt;% 
+  update_role(contains("id"), sch_name, ncessch, new_role = "id vars") %&gt;% 
+  step_nzv(all_predictors(), freq_cut = 0, unique_cut = 0) %&gt;% 
+* step_unknown(all_nominal()) %&gt;%
+* step_medianimpute(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;%
+  step_center(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;% 
+  step_scale(all_numeric(), -all_outcomes(), -has_role("id vars")) %&gt;% 
+  step_dummy(all_nominal(), -has_role("id vars")) %&gt;% 
+  step_pca(all_numeric(), -all_outcomes(), -has_role("id vars"), 
+           threshold = .95)
+
+prepped_rec &lt;- prep(rec)
+```
+
+---
+# Apply in CV
+* Note the transformations are being conducted .b[for each fold], which ensures there is no data leakage
+
+
+```r
+cv &lt;- vfold_cv(train)
+cv_baked &lt;- cv %&gt;% 
+  mutate(baked = map(splits, ~bake(prepped_rec, .x)))
+cv_baked
+```
+
+```
+## #  10-fold cross-validation 
+## # A tibble: 10 x 3
+##    splits               id     baked                  
+##  * &lt;named list&gt;         &lt;chr&gt;  &lt;named list&gt;           
+##  1 &lt;split [128K/14.2K]&gt; Fold01 &lt;tibble [127,968 × 22]&gt;
+##  2 &lt;split [128K/14.2K]&gt; Fold02 &lt;tibble [127,968 × 22]&gt;
+##  3 &lt;split [128K/14.2K]&gt; Fold03 &lt;tibble [127,968 × 22]&gt;
+##  4 &lt;split [128K/14.2K]&gt; Fold04 &lt;tibble [127,968 × 22]&gt;
+##  5 &lt;split [128K/14.2K]&gt; Fold05 &lt;tibble [127,968 × 22]&gt;
+##  6 &lt;split [128K/14.2K]&gt; Fold06 &lt;tibble [127,968 × 22]&gt;
+##  7 &lt;split [128K/14.2K]&gt; Fold07 &lt;tibble [127,968 × 22]&gt;
+##  8 &lt;split [128K/14.2K]&gt; Fold08 &lt;tibble [127,969 × 22]&gt;
+##  9 &lt;split [128K/14.2K]&gt; Fold09 &lt;tibble [127,969 × 22]&gt;
+## 10 &lt;split [128K/14.2K]&gt; Fold10 &lt;tibble [127,969 × 22]&gt;
+```
+
+---
+class: inverse 
+# Wrapping up
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
