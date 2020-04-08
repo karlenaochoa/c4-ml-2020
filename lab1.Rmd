@@ -63,7 +63,7 @@ set.seed(3000)
 
 ```
 
-### 5. Please demonstrate that that there are **no** common values in the `id` column between `Fold01` & `Fold02`, and `Fold09` & `Fold10` in your 10-fold cross-validation object.
+### 5. Please demonstrate that that there are **no** common values in the `id` columns of the `assessment` data between `Fold01` & `Fold02`, and `Fold09` & `Fold10` (of your 10-fold cross-validation object).
 
 ```{r}
 
@@ -86,7 +86,7 @@ set.seed(3000)
 
 ```
 
-### 8. Please demonstrate that that there **are** common values in the `id` column between `Resample 8` & `Resample 12`, and `Resample 2` & `Resample 20`in your MC CV object.
+### 8. Please demonstrate that that there **are** common values in the `id` columns of the `assessment` data between `Resample 8` & `Resample 12`, and `Resample 2` & `Resample 20`in your MC CV object.
 
 ```{r}
 
