@@ -433,7 +433,9 @@ cv
 
 ---
 # Looking into it more
-* Use `analysis` to extract the data from the corresponding left out fold, or `assessment` to extract all the data *except* the left out fold 
+* Use `analysis` to extract the data from the corresponding fold that you will use to estimate the model
+
+* Use `assessment` to extract all .ital[other] data from the corresponding fold, which you will use to evaluate the model 
 
 
 --
@@ -559,6 +561,10 @@ mod
 ```
 ## Linear Regression Model Specification (regression)
 ```
+
+
+--
+Let's briefly look at the [full set of models](https://tidymodels.github.io/parsnip/articles/articles/Models.html) that can be estimated within this framework.
 
 ---
 # Specify an "engine"
@@ -699,7 +705,7 @@ m1
 ## #  10-fold cross-validation using stratification 
 ## # A tibble: 10 x 4
 ##    splits                 id     .metrics         .notes          
-##  * &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
+##    &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
 ##  1 &lt;split [125.3K/13.9K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
 ##  2 &lt;split [125.3K/13.9K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
 ##  3 &lt;split [125.3K/13.9K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
@@ -720,7 +726,8 @@ m1
 m1_metrics &lt;- m1 %&gt;% 
   select(id, .metrics) %&gt;% 
   unnest(.metrics) %&gt;% 
-  spread(.metric, .estimate)
+  pivot_wider(names_from = .metric, 
+              values_from = .estimate)
 
 m1_metrics
 ```
@@ -786,7 +793,7 @@ m2
 ## #  10-fold cross-validation using stratification 
 ## # A tibble: 10 x 4
 ##    splits                 id     .metrics         .notes          
-##  * &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
+##    &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
 ##  1 &lt;split [125.3K/13.9K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
 ##  2 &lt;split [125.3K/13.9K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
 ##  3 &lt;split [125.3K/13.9K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
@@ -808,7 +815,8 @@ m2
 m2_metrics &lt;- m2 %&gt;% 
   select(id, .metrics) %&gt;% 
   unnest(.metrics) %&gt;% 
-  spread(.metric, .estimate)
+  pivot_wider(names_from = .metric, 
+              values_from = .estimate)
 
 m2_metrics
 ```
@@ -998,6 +1006,48 @@ metrics_joined %&gt;%
 ### Conclusion: Probs not
 
 ---
+# Variable importance
+
+* Another way to think about this is how .b[important] specific variables, interactions, or other features of the model are to the estimated predictive accuracy
+
+
+--
+!
+.center[
+![](https://koalaverse.github.io/vip/reference/figures/logo-vip.png)
+]-
+--
+# VIP
+* `vip::vip`: Create a `v`ariable `i`mportance `p`lot
+* `vip::vi`: Estimate `v`ariable `i`mportance (numbers)
+
+--
+
+```r
+library(vip)
+m &lt;- lm(score ~ gndr + sp_ed_fg + gndr:sp_ed_fg, data = train)
+vi(m)
+```
+
+```
+## # A tibble: 3 x 3
+##   Variable        Importance Sign 
+##   &lt;chr&gt;                &lt;dbl&gt; &lt;chr&gt;
+## 1 sp_ed_fgY        77.23053  NEG  
+## 2 gndrM             6.807127 POS  
+## 3 gndrM:sp_ed_fgY   6.439259 POS
+```
+
+---
+# Graphically
+
+```r
+vip(m)
+```
+
+![](w3p1-var-select-model-perf_files/figure-html/vip1-1.png)&lt;!-- --&gt;
+
+---
 # How to improve this model
 * I've approached this from a (light) theoretical variable-inclusion perspective
 
@@ -1014,7 +1064,6 @@ metrics_joined %&gt;%
 
 
 ```r
-library(vip)
 vip_1a &lt;- vip(lm(score ~ ., train))
 ```
 
@@ -1024,7 +1073,7 @@ vip_1a &lt;- vip(lm(score ~ ., train))
 vip_1a
 ```
 
-![](w3p1-var-select-model-perf_files/figure-html/show-vip1-1.png)&lt;!-- --&gt;
+![](w3p1-var-select-model-perf_files/figure-html/show-vip2-1.png)&lt;!-- --&gt;
 
 
 --
@@ -1032,6 +1081,7 @@ vip_1a
 This basically tells us that outside of sped (which we've included already) gifted/talented (tag), economic disadvantage, test date, and ethnic code are important predictors. Let's look a bit deeper.
 
 ---
+# Numerically
 
 ```r
 vip_1b &lt;- vi(lm(score ~ ., train))
@@ -1055,7 +1105,6 @@ vip_1b
 ## # … with 38 more rows
 ```
 
-Numbers view of the previous plot
 
 ---
 # Interactions
@@ -1088,7 +1137,7 @@ m3
 ## #  10-fold cross-validation using stratification 
 ## # A tibble: 10 x 4
 ##    splits                 id     .metrics         .notes          
-##  * &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
+##    &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
 ##  1 &lt;split [125.3K/13.9K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
 ##  2 &lt;split [125.3K/13.9K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
 ##  3 &lt;split [125.3K/13.9K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
@@ -1110,7 +1159,8 @@ m3
 m3 %&gt;% 
   select(id, .metrics) %&gt;% 
   unnest(.metrics) %&gt;% 
-  spread(.metric, .estimate)
+  pivot_wider(names_from = .metric, 
+              values_from = .estimate)
 ```
 
 ```
@@ -1151,7 +1201,7 @@ m3 %&gt;%
 
 Try to refine this model further to boost model performance more! Consider modifications listed in previous slide (inclusion of other variables, nonlinear terms, or interactions)
 
-<div class="countdown" id="timer_5e827554" style="top:0.5;right:0.5;bottom:0.5;left:0.75;" data-warnwhen="0">
+<div class="countdown" id="timer_5e8d2e1d" style="top:0.5;right:0.5;bottom:0.5;left:0.75;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">10</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 
@@ -1330,24 +1380,32 @@ see [yardstick documentation](https://tidymodels.github.io/yardstick/reference/i
 
 ---
 # A few notes
+
 * RMSE is the mean error, but on the scale of the outcome
   + .b[Pros]: Generally fairly interpretable - how much are your predictions off by, on average?
-  + .r[Cons]: The mean (generally) can be suceptible to outliers
-  
+  + .r[Cons]: The mean (generally) can be susceptible to outliers
+
+
 --
 * MAE is the median error
   + .b[Pros]: Less influenced by outliers
   + .r[Cons]: Somewhat less familiar; sometimes the outlier cases are highly important
-  
+
+
 --
 * Huber Loss balances (R)MSE and MAE
   + Quadratic for small residual values, linear for large residual values
   + .b[Pros]: Sensitivity of RMSE with robustness of MAE
-  + .r[Cons]: Less familiar and interpretable; does not translate to common measure of central tendancy
+  + .r[Cons]: Less familiar and interpretable; does not translate to common measure of central tenancy
 
 ---
 # Huber loss vs squared errors
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Huber_loss.svg/1920px-Huber_loss.svg.png)
+
+.center[
+
+&lt;img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Huber_loss.svg/1920px-Huber_loss.svg.png" height="500px" /&gt;
+
+]
 
 ---
 # Overall takeaway
@@ -1356,7 +1414,15 @@ see [yardstick documentation](https://tidymodels.github.io/yardstick/reference/i
 --
 * Choosing a metric can be really important, and often is driven by the specific problem
 
-.g[.small[Example from handwriting recognition algorithm]]
+.g[(Example from handwriting recognition algorithm)]
+
+
+--
+* We haven't talked about classification yet, but there are similarly many different evaluation metrics there
+
+
+--
+* We'll try to incorporate a discussion of these as we go along
 
 ---
 # Kaggle
@@ -1365,7 +1431,7 @@ see [yardstick documentation](https://tidymodels.github.io/yardstick/reference/i
 
 
 --
-* Preprocess the `train.csv` using the recipe we used above (particularly if you have interactions)
+* Preprocess the `train.csv` using the recipe we used above (particularly if you have interactions, polynomial terms, etc.)
 
 
 --

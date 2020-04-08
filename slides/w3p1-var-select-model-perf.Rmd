@@ -152,7 +152,6 @@ Note that this is already our "training" data, but we have to treat it like our 
 set.seed(123)
 splt <- initial_split(d, strata = lang_cd)
 train <- training(splt)
-
 ```
 
 ---
@@ -207,7 +206,9 @@ cv
 
 ---
 # Looking into it more
-* Use `analysis` to extract the data from the corresponding left out fold, or `assessment` to extract all the data *except* the left out fold 
+* Use `analysis` to extract the data from the corresponding fold that you will use to estimate the model
+
+* Use `assessment` to extract all .ital[other] data from the corresponding fold, which you will use to evaluate the model 
 
 
 --
@@ -278,6 +279,10 @@ mod <- linear_reg()
 ```{r print-model}
 mod
 ```
+
+
+--
+Let's briefly look at the [full set of models](https://tidymodels.github.io/parsnip/articles/articles/Models.html) that can be estimated within this framework.
 
 ---
 # Specify an "engine"
@@ -395,7 +400,8 @@ m1
 m1_metrics <- m1 %>% 
   select(id, .metrics) %>% 
   unnest(.metrics) %>% 
-  spread(.metric, .estimate)
+  pivot_wider(names_from = .metric, 
+              values_from = .estimate)
 
 m1_metrics
 ```
@@ -432,7 +438,8 @@ m2
 m2_metrics <- m2 %>% 
   select(id, .metrics) %>% 
   unnest(.metrics) %>% 
-  spread(.metric, .estimate)
+  pivot_wider(names_from = .metric, 
+              values_from = .estimate)
 
 m2_metrics
 ```
@@ -511,6 +518,35 @@ metrics_joined %>%
 ### Conclusion: Probs not
 
 ---
+# Variable importance
+
+* Another way to think about this is how .b[important] specific variables, interactions, or other features of the model are to the estimated predictive accuracy
+
+
+--
+!
+.center[
+![](https://koalaverse.github.io/vip/reference/figures/logo-vip.png)
+]-
+--
+# VIP
+* `vip::vip`: Create a `v`ariable `i`mportance `p`lot
+* `vip::vi`: Estimate `v`ariable `i`mportance (numbers)
+
+--
+```{r vi1}
+library(vip)
+m <- lm(score ~ gndr + sp_ed_fg + gndr:sp_ed_fg, data = train)
+vi(m)
+```
+
+---
+# Graphically
+```{r vip1}
+vip(m)
+```
+
+---
 # How to improve this model
 * I've approached this from a (light) theoretical variable-inclusion perspective
 
@@ -525,13 +561,12 @@ metrics_joined %>%
 
 --
 
-```{r vip1}
-library(vip)
+```{r vip2}
 vip_1a <- vip(lm(score ~ ., train))
 ```
 
 ---
-```{r show-vip1}
+```{r show-vip2}
 vip_1a
 ```
 
@@ -541,12 +576,12 @@ vip_1a
 This basically tells us that outside of sped (which we've included already) gifted/talented (tag), economic disadvantage, test date, and ethnic code are important predictors. Let's look a bit deeper.
 
 ---
-```{r vip1b1}
+# Numerically
+```{r vip2b1}
 vip_1b <- vi(lm(score ~ ., train))
 vip_1b
 ```
 
-Numbers view of the previous plot
 
 ---
 # Interactions
@@ -579,7 +614,8 @@ m3
 m3 %>% 
   select(id, .metrics) %>% 
   unnest(.metrics) %>% 
-  spread(.metric, .estimate)
+  pivot_wider(names_from = .metric, 
+              values_from = .estimate)
 ```
 
 ---
@@ -697,11 +733,12 @@ see [yardstick documentation](https://tidymodels.github.io/yardstick/reference/i
 
 ---
 # A few notes
+
 * RMSE is the mean error, but on the scale of the outcome
   + .b[Pros]: Generally fairly interpretable - how much are your predictions off by, on average?
-  + .r[Cons]: The mean (generally) can be suceptible to outliers
+  + .r[Cons]: The mean (generally) can be susceptible to outliers
 
- 
+
 --
 * MAE is the median error
   + .b[Pros]: Less influenced by outliers
@@ -712,13 +749,18 @@ see [yardstick documentation](https://tidymodels.github.io/yardstick/reference/i
 * Huber Loss balances (R)MSE and MAE
   + Quadratic for small residual values, linear for large residual values
   + .b[Pros]: Sensitivity of RMSE with robustness of MAE
-  + .r[Cons]: Less familiar and interpretable; does not translate to common measure of central tendancy
+  + .r[Cons]: Less familiar and interpretable; does not translate to common measure of central tenancy
 
 ---
 # Huber loss vs squared errors
-```{r huber-loss, fig.height = 6}
-kintr::include_graphics(https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Huber_loss.svg/1920px-Huber_loss.svg.png)
+
+.center[
+
+```{r huber-loss, out.height = "500px", echo = FALSE}
+knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Huber_loss.svg/1920px-Huber_loss.svg.png")
 ```
+
+]
 
 ---
 # Overall takeaway
@@ -728,6 +770,14 @@ kintr::include_graphics(https://upload.wikimedia.org/wikipedia/commons/thumb/c/c
 * Choosing a metric can be really important, and often is driven by the specific problem
 
 .g[(Example from handwriting recognition algorithm)]
+
+
+--
+* We haven't talked about classification yet, but there are similarly many different evaluation metrics there
+
+
+--
+* We'll try to incorporate a discussion of these as we go along
 
 ---
 # Kaggle
