@@ -184,6 +184,7 @@ class: inverse center middle
 # Initial cleanup
 * Remove classification column
 * Recode missing data on a few variables
+* Sample only a fraction of the overall data
 
 
 ```r
@@ -195,7 +196,7 @@ d &lt;- d %&gt;%
          tst_dt = lubridate::as_date(lubridate::mdy_hms(tst_dt))) %&gt;% 
   # only use a sample
   group_by(lang_cd) %&gt;% 
-  sample_frac(.25) %&gt;% 
+  sample_frac(.25) %&gt;% # Could even go lower
   ungroup() 
 ```
 
@@ -1274,7 +1275,7 @@ m3 %&gt;%
 
 Try to refine this model further to boost model performance more! Consider modifications listed in previous slide (inclusion of other variables, nonlinear terms, or interactions)
 
-<div class="countdown" id="timer_5e910a55" style="top:0.5;right:0.5;bottom:0.5;left:0.75;" data-warnwhen="0">
+<div class="countdown" id="timer_5e91d010" style="top:0.5;right:0.5;bottom:0.5;left:0.75;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">10</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 
@@ -1282,18 +1283,56 @@ Try to refine this model further to boost model performance more! Consider modif
 # Evaluation on test set
 * Note we wouldn't usually jump to this point yet, but let's try.
 
+
 --
-### First: Fit model to full training data
+### First
+Fit model to full training data
+
+
+--
+### First first
+Apply our recipe to the full training data
 
 
 ```r
-test_mod &lt;- mod %&gt;% 
-  fit(score ~ tag_ed_fg + sp_ed_fg + econ_dsvntg +
-              tst_dt + ethnic_cd, 
-      data = train) 
+train_prepped &lt;- post_vip_rec %&gt;% 
+  prep() %&gt;% 
+  juice()
 ```
 
 ---
+
+```r
+train_prepped
+```
+
+```
+## # A tibble: 34,818 x 6
+##    tag_ed_fg sp_ed_fg econ_dsvntg tst_dt     ethnic_cd score
+##    &lt;fct&gt;     &lt;fct&gt;    &lt;fct&gt;       &lt;date&gt;     &lt;fct&gt;     &lt;dbl&gt;
+##  1 N         N        N           2018-05-23 W          2560
+##  2 N         N        Y           2018-04-23 H          2299
+##  3 N         Y        Y           2018-05-16 W          2453
+##  4 N         N        Y           2018-05-15 H          2367
+##  5 N         N        N           2018-04-26 H          2607
+##  6 N         N        Y           2018-05-21 M          2553
+##  7 N         Y        Y           2018-05-15 W          2396
+##  8 N         Y        N           2018-05-23 W          2404
+##  9 N         N        Y           2018-05-30 W          2579
+## 10 N         N        N           2018-05-31 W          2590
+## # … with 34,808 more rows
+```
+
+---
+# Fit to full train
+
+```r
+test_mod &lt;- mod %&gt;% 
+  fit(score ~ ., 
+      data = train_prepped) 
+```
+
+--
 ### Next: Extract test dataset
 
 
@@ -1328,11 +1367,41 @@ test
 ```
 
 ---
+# Prepare test dataset
+
+
+```r
+# Apply recipe to test dataset
+test_prepped &lt;- post_vip_rec %&gt;% 
+  prep() %&gt;% 
+* bake(test)
+
+test_prepped
+```
+
+```
+## # A tibble: 11,605 x 6
+##    tag_ed_fg sp_ed_fg econ_dsvntg tst_dt     ethnic_cd score
+##    &lt;fct&gt;     &lt;fct&gt;    &lt;fct&gt;       &lt;date&gt;     &lt;fct&gt;     &lt;dbl&gt;
+##  1 N         Y        Y           2018-05-10 H          2430
+##  2 N         N        Y           2018-05-24 H          2326
+##  3 N         N        Y           2018-05-17 M          2435
+##  4 N         Y        Y           2018-05-30 H          2395
+##  5 Y         N        N           2018-05-18 M          2658
+##  6 N         N        Y           2018-05-11 W          2351
+##  7 N         N        Y           2018-05-16 H          2393
+##  8 N         N        N           2018-05-23 W          2502
+##  9 N         N        N           2018-05-22 M          2192
+## 10 N         N        Y           2018-05-09 I          2325
+## # … with 11,595 more rows
+```
+
+---
 # Make predictions
 
 
 ```r
-preds &lt;- test %&gt;% 
+preds &lt;- test_prepped %&gt;% 
   mutate(estimate = predict(test_mod$fit, newdata = .)) %&gt;% 
   select(truth = score, estimate)
 preds

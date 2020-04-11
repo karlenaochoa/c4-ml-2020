@@ -127,6 +127,7 @@ class: inverse center middle
 # Initial cleanup
 * Remove classification column
 * Recode missing data on a few variables
+* Sample only a fraction of the overall data
 
 ```{r initial-prep}
 set.seed(123)
@@ -137,7 +138,7 @@ d <- d %>%
          tst_dt = lubridate::as_date(lubridate::mdy_hms(tst_dt))) %>% 
   # only use a sample
   group_by(lang_cd) %>% 
-  sample_frac(.25) %>% 
+  sample_frac(.25) %>% # Could even go lower
   ungroup() 
 ```
 
@@ -690,17 +691,36 @@ Try to refine this model further to boost model performance more! Consider modif
 # Evaluation on test set
 * Note we wouldn't usually jump to this point yet, but let's try.
 
---
-### First: Fit model to full training data
 
-```{r fit-full-training}
-test_mod <- mod %>% 
-  fit(score ~ tag_ed_fg + sp_ed_fg + econ_dsvntg +
-              tst_dt + ethnic_cd, 
-      data = train) 
+--
+### First
+Fit model to full training data
+
+
+--
+### First first
+Apply our recipe to the full training data
+
+```{r prep-full-train}
+train_prepped <- post_vip_rec %>% 
+  prep() %>% 
+  juice()
 ```
 
 ---
+```{r print-train-prepped}
+train_prepped
+```
+
+---
+# Fit to full train
+```{r fit-full-training}
+test_mod <- mod %>% 
+  fit(score ~ ., 
+      data = train_prepped) 
+```
+
+--
 ### Next: Extract test dataset
 
 ```{r test}
@@ -709,10 +729,22 @@ test
 ```
 
 ---
+# Prepare test dataset
+
+```{r prep-test}
+# Apply recipe to test dataset
+test_prepped <- post_vip_rec %>% 
+  prep() %>% 
+  bake(test) #<<
+
+test_prepped
+```
+
+---
 # Make predictions
 
 ```{r preds}
-preds <- test %>% 
+preds <- test_prepped %>% 
   mutate(estimate = predict(test_mod$fit, newdata = .)) %>% 
   select(truth = score, estimate)
 preds
