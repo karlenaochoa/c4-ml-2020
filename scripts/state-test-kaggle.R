@@ -20,7 +20,7 @@ test %>%
   write_csv(here::here("data", "solutions.csv"))
 
 test %>% 
-  mutate(Predicted = map_dbl(score, ~.x + rnorm(1, sd = 50))) %>% 
+  mutate(Predicted = map_dbl(score, ~.x + rnorm(1, sd = 200))) %>% 
   select(Id = id, Predicted) %>% 
   write_csv(here::here("data", "sample-submission.csv"))
 
