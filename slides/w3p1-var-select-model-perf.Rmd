@@ -71,13 +71,52 @@ theme_set(theme_minimal(25))
 
 ---
 # Load the data
-* Please follow along!
+Please follow along!
 
-```{r load-data}
+--
+### Dealing with file size
+A few people had issues during the last lab because the file is rather large.
+
+Let's use a new package that uses "lazy loading". We can help it further by providing a column specification.
+
+---
+```{r col-spec}
 library(tidyverse)
-library(tidymodels)
-d <- read_csv(here::here("data", "edld-654-spring-2020", "train.csv"))
-head(d)
+
+col_specs <- cols(
+  .default = col_character(),
+  id = col_double(),
+  attnd_dist_inst_id = col_double(),
+  attnd_schl_inst_id = col_double(),
+  enrl_grd = col_double(),
+  calc_admn_cd = col_logical(),
+  partic_dist_inst_id = col_double(),
+  partic_schl_inst_id = col_double(),
+  lang_cd = col_character(), #<<
+  score = col_double(),
+  classification = col_double(),
+  ncessch = col_double(),
+  lat = col_double(),
+  lon = col_double()
+)
+```
+
+---
+# How did I get this?
+You could do it manually, but that would be a lot of work. Instead, just read in, say, 10 rows, and make any adjustments to the specs you need to after that.
+
+```{r readr-fast, message = TRUE}
+read_csv(here::here("data", "edld-654-spring-2020", "train.csv"),
+         n_max = 10)
+```
+
+
+---
+```{r load-data}
+d <- vroom::vroom(
+  here::here("data", "edld-654-spring-2020", "train.csv"),
+  col_types = col_specs
+)
 ```
 
 ---
@@ -89,21 +128,17 @@ class: inverse center middle
 * Remove classification column
 * Recode missing data on a few variables
 
-```{r label, options}
+```{r initial-prep}
+set.seed(123)
 d <- d %>% 
   select(-classification)  %>% 
   mutate(lang_cd = ifelse(is.na(lang_cd), "E", lang_cd),
-         calc_admn_cd = ifelse(is.na(calc_admn_cd), "G", calc_admn_cd),
          ayp_lep = ifelse(is.na(ayp_lep), "G", ayp_lep),
-         tst_dt = lubridate::as_date(lubridate::mdy_hms(tst_dt)))
-```
-
-* Let's also make things really easy on ourselves, and remove all missing data.
-
-```{r rem-missing}
-d <- d %>% 
-  mutate_if(is.character, as.factor) %>% 
-  drop_na()
+         tst_dt = lubridate::as_date(lubridate::mdy_hms(tst_dt))) %>% 
+  # only use a sample
+  group_by(lang_cd) %>% 
+  sample_frac(.25) %>% 
+  ungroup() 
 ```
 
 ---
@@ -117,12 +152,20 @@ d %>%
 
 ---
 # Remove constant variables
+* Also make things really easy and remove missing data
 
 ```{r rm-constants}
 d <- d %>% 
-  select(-grp_rpt_dist_partic, -rc_dist_partic,
-         -ayp_dist_partic, -calc_admn_cd)
+  # remove any rows or columns that are fully missing
+  janitor::remove_empty(c("rows", "cols")) %>% 
+  
+  # drop any row that has a missing value
+  drop_na() %>% 
+  
+  # drop any column that doesn't have more than 1 unique value
+  select_if(~length(unique(.x)) > 1)
 ```
+
 
 ---
 class:inverse center middle
@@ -149,7 +192,7 @@ Note that this is already our "training" data, but we have to treat it like our 
 
 --
 ```{r initial-split}
-set.seed(123)
+library(tidymodels)
 splt <- initial_split(d, strata = lang_cd)
 train <- training(splt)
 ```
@@ -220,7 +263,7 @@ cv$splits[[1]] %>%
   assessment() %>% #<<
   nrow()
 
-13921 / (13921 + 125281)
+3482 / (3482 + 31336)
 ```
 
 ]
@@ -232,7 +275,7 @@ cv$splits[[1]] %>%
   analysis() %>% #<<
   nrow()
 
-125281 / (13921 + 125281)
+31336 / (3482 + 31336)
 ```
 
 ]
@@ -524,11 +567,12 @@ metrics_joined %>%
 
 
 --
-!
+
 .center[
 ![](https://koalaverse.github.io/vip/reference/figures/logo-vip.png)
-]-
---
+]
+
+---
 # VIP
 * `vip::vip`: Create a `v`ariable `i`mportance `p`lot
 * `vip::vi`: Estimate `v`ariable `i`mportance (numbers)
@@ -566,7 +610,7 @@ vip_1a <- vip(lm(score ~ ., train))
 ```
 
 ---
-```{r show-vip2}
+```{r show-vip2, fig.height = 6.5}
 vip_1a
 ```
 
@@ -587,7 +631,7 @@ vip_1b
 # Interactions
 You can also use vip with interactions
 
-```{r vip2a, cache = TRUE, fig.height = 5}
+```{r vip2a, cache = TRUE, fig.height = 5.75}
 vip_2a <- vip(lm(score ~ .^2, train))
 vip_2a
 ```
@@ -620,7 +664,7 @@ m3 %>%
 
 ---
 ## Improving model performance further
-* Other variables? (e.g., grade level of general assessment)
+* Other variables? (e.g., grade level)
 
 * Interactions?
   + `step_interact`
@@ -646,32 +690,22 @@ Try to refine this model further to boost model performance more! Consider modif
 # Evaluation on test set
 * Note we wouldn't usually jump to this point yet, but let's try.
 
-
 --
-### First: Extract test dataset
+### First: Fit model to full training data
+
+```{r fit-full-training}
+test_mod <- mod %>% 
+  fit(score ~ tag_ed_fg + sp_ed_fg + econ_dsvntg +
+              tst_dt + ethnic_cd, 
+      data = train) 
+```
+
+---
+### Next: Extract test dataset
 
 ```{r test}
 test <- testing(splt)
 test
-```
-
----
-# Fit model
-
-```{r pred}
-test_mod <- mod %>% 
-  fit(score ~ tag_ed_fg + sp_ed_fg + econ_dsvntg +
-              tst_dt + ethnic_cd, 
-      data = test) #<<
-
-```
-
----
-# Look at model
-### Just for fun
-
-```{r look-test-mod}
-summary(test_mod$fit)
 ```
 
 ---
@@ -752,11 +786,12 @@ see [yardstick documentation](https://tidymodels.github.io/yardstick/reference/i
   + .r[Cons]: Less familiar and interpretable; does not translate to common measure of central tenancy
 
 ---
-# Huber loss vs squared errors
+# Huber loss 
+Compared to .b[squared errors]
 
 .center[
 
-```{r huber-loss, out.height = "500px", echo = FALSE}
+```{r huber-loss, out.height = "400px", echo = FALSE}
 knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Huber_loss.svg/1920px-Huber_loss.svg.png")
 ```
 

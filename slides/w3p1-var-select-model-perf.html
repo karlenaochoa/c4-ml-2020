@@ -74,26 +74,85 @@ class: center, middle, inverse, title-slide
 
 ---
 # Load the data
-* Please follow along!
+Please follow along!
 
+--
+### Dealing with file size
+A few people had issues during the last lab because the file is rather large.
+
+Let's use a new package that uses "lazy loading". We can help it further by providing a column specification.
+
+---
 
 ```r
 library(tidyverse)
-library(tidymodels)
-d &lt;- read_csv(here::here("data", "edld-654-spring-2020", "train.csv"))
-head(d)
+
+col_specs &lt;- cols(
+  .default = col_character(),
+  id = col_double(),
+  attnd_dist_inst_id = col_double(),
+  attnd_schl_inst_id = col_double(),
+  enrl_grd = col_double(),
+  calc_admn_cd = col_logical(),
+  partic_dist_inst_id = col_double(),
+  partic_schl_inst_id = col_double(),
+* lang_cd = col_character(),
+  score = col_double(),
+  classification = col_double(),
+  ncessch = col_double(),
+  lat = col_double(),
+  lon = col_double()
+)
+```
+
+---
+# How did I get this?
+You could do it manually, but that would be a lot of work. Instead, just read in, say, 10 rows, and make any adjustments to the specs you need to after that.
+
+
+```r
+read_csv(here::here("data", "edld-654-spring-2020", "train.csv"),
+         n_max = 10)
 ```
 
 ```
-## # A tibble: 6 x 40
-##      id gndr  ethnic_cd attnd_dist_inst_id attnd_schl_inst_id enrl_grd
-##   &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;                  &lt;dbl&gt;              &lt;dbl&gt;    &lt;dbl&gt;
-## 1     1 F     H                       2142               1330        6
-## 2     2 M     W                       2138                785        5
-## 3     3 M     M                       1995               3400        8
-## 4     5 F     H                       2053               1773        8
-## 5     7 F     H                       1964                191        8
-## 6    10 M     H                       1948                184        8
+## Parsed with column specification:
+## cols(
+##   .default = col_character(),
+##   id = col_double(),
+##   attnd_dist_inst_id = col_double(),
+##   attnd_schl_inst_id = col_double(),
+##   enrl_grd = col_double(),
+##   calc_admn_cd = col_logical(),
+##   partic_dist_inst_id = col_double(),
+##   partic_schl_inst_id = col_double(),
+##   lang_cd = col_logical(),
+##   score = col_double(),
+##   classification = col_double(),
+##   ncessch = col_double(),
+##   lat = col_double(),
+##   lon = col_double()
+## )
+```
+
+```
+## See spec(...) for full column specifications.
+```
+
+```
+## # A tibble: 10 x 40
+##       id gndr  ethnic_cd attnd_dist_inst_id attnd_schl_inst_id enrl_grd
+##    &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;                  &lt;dbl&gt;              &lt;dbl&gt;    &lt;dbl&gt;
+##  1     1 F     H                       2142               1330        6
+##  2     2 M     W                       2138                785        5
+##  3     3 M     M                       1995               3400        8
+##  4     5 F     H                       2053               1773        8
+##  5     7 F     H                       1964                191        8
+##  6    10 M     H                       1948                184        8
+##  7    12 F     W                       1924                 84        8
+##  8    13 M     W                       1947               4396        8
+##  9    14 F     W                       1965                201        8
+## 10    16 M     M                       1945                168        8
 ## # … with 34 more variables: calc_admn_cd &lt;lgl&gt;, tst_bnch &lt;chr&gt;, tst_dt &lt;chr&gt;,
 ## #   migrant_ed_fg &lt;chr&gt;, ind_ed_fg &lt;chr&gt;, sp_ed_fg &lt;chr&gt;, tag_ed_fg &lt;chr&gt;,
 ## #   econ_dsvntg &lt;chr&gt;, ayp_lep &lt;chr&gt;, stay_in_dist &lt;chr&gt;, stay_in_schl &lt;chr&gt;,
@@ -101,10 +160,20 @@ head(d)
 ## #   ayp_schl_partic &lt;chr&gt;, ayp_dist_prfrm &lt;chr&gt;, ayp_schl_prfrm &lt;chr&gt;,
 ## #   rc_dist_partic &lt;chr&gt;, rc_schl_partic &lt;chr&gt;, rc_dist_prfrm &lt;chr&gt;,
 ## #   rc_schl_prfrm &lt;chr&gt;, partic_dist_inst_id &lt;dbl&gt;, partic_schl_inst_id &lt;dbl&gt;,
-## #   lang_cd &lt;chr&gt;, tst_atmpt_fg &lt;chr&gt;, grp_rpt_dist_partic &lt;chr&gt;,
+## #   lang_cd &lt;lgl&gt;, tst_atmpt_fg &lt;chr&gt;, grp_rpt_dist_partic &lt;chr&gt;,
 ## #   grp_rpt_schl_partic &lt;chr&gt;, grp_rpt_dist_prfrm &lt;chr&gt;,
 ## #   grp_rpt_schl_prfrm &lt;chr&gt;, score &lt;dbl&gt;, classification &lt;dbl&gt;, ncessch &lt;dbl&gt;,
 ## #   lat &lt;dbl&gt;, lon &lt;dbl&gt;
+```
+
+
+---
+
+```r
+d &lt;- vroom::vroom(
+  here::here("data", "edld-654-spring-2020", "train.csv"),
+  col_types = col_specs
+)
 ```
 
 ---
@@ -118,21 +187,16 @@ class: inverse center middle
 
 
 ```r
+set.seed(123)
 d &lt;- d %&gt;% 
   select(-classification)  %&gt;% 
   mutate(lang_cd = ifelse(is.na(lang_cd), "E", lang_cd),
-         calc_admn_cd = ifelse(is.na(calc_admn_cd), "G", calc_admn_cd),
          ayp_lep = ifelse(is.na(ayp_lep), "G", ayp_lep),
-         tst_dt = lubridate::as_date(lubridate::mdy_hms(tst_dt)))
-```
-
-* Let's also make things really easy on ourselves, and remove all missing data.
-
-
-```r
-d &lt;- d %&gt;% 
-  mutate_if(is.character, as.factor) %&gt;% 
-  drop_na()
+         tst_dt = lubridate::as_date(lubridate::mdy_hms(tst_dt))) %&gt;% 
+  # only use a sample
+  group_by(lang_cd) %&gt;% 
+  sample_frac(.25) %&gt;% 
+  ungroup() 
 ```
 
 ---
@@ -148,170 +212,178 @@ d %&gt;%
 ```
 ## $id
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       1   62947  125720  125940  188946  252565 
+##      18   63177  126290  126332  189310  252557 
 ## 
 ## $gndr
 ##     F     M 
-## 90677 94925 
+## 23112 24244 
 ## 
 ## $ethnic_cd
-##      A      B      H      I      M      P      W 
-##   7507   4051  45489   2406  11589   1407 113153 
+##     A     B     H     I     M     P     W 
+##  1866   964 11344   616  3069   367 29130 
 ## 
 ## $attnd_dist_inst_id
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    1894    2039    2142    2120    2188    4131 
+##    1894    2041    2142    2120    2190    4131 
 ## 
 ## $attnd_schl_inst_id
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       1     481     932    1351    1288    5382 
+##       1     503     938    1380    1303    5392 
 ## 
 ## $enrl_grd
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   3.000   4.000   5.000   5.466   7.000   8.000 
+##   3.000   4.000   5.000   5.461   7.000   8.000 
 ## 
 ## $calc_admn_cd
-##      G 
-## 185602 
+##    Mode    NA's 
+## logical   47356 
 ## 
 ## $tst_bnch
-##    1B    2B    3B    G4    G6    G7 
-## 30774 32003 29681 32041 31109 29994 
+##   1B   2B   3B   G4   G6   G7 
+## 7847 8172 7597 8281 7902 7557 
 ## 
 ## $tst_dt
 ##         Min.      1st Qu.       Median         Mean      3rd Qu.         Max. 
-## "2018-02-06" "2018-05-11" "2018-05-18" "2018-05-17" "2018-05-24" "2018-06-08" 
+## "2018-02-06" "2018-05-10" "2018-05-18" "2018-05-17" "2018-05-24" "2018-06-08" 
 ## 
 ## $migrant_ed_fg
-##      N      Y 
-## 180419   5183 
+##     N     Y 
+## 46077  1279 
 ## 
 ## $ind_ed_fg
-##      N      y      Y 
-## 183453      5   2144 
+##     N     Y  NA's 
+## 46802   541    13 
 ## 
 ## $sp_ed_fg
-##      N      Y 
-## 160726  24876 
+##     N     Y  NA's 
+## 40936  6407    13 
 ## 
 ## $tag_ed_fg
-##      N      Y 
-## 175077  10525 
+##     N     Y  NA's 
+## 44429  2809   118 
 ## 
 ## $econ_dsvntg
-##      N      Y 
-##  77431 108171 
+##     N     Y  NA's 
+## 19973 27249   134 
 ## 
 ## $ayp_lep
-##      A      B      E      F      G      M      N      S      W      X      Y 
-##     99    754   6244  15554 147793    162   3761     92    223   3046   7874 
+##     A     B     E     F     G     M     N     S     W     X     Y 
+##    27   184  1598  3833 37875    43   945    22    69   765  1995 
 ## 
 ## $stay_in_dist
-##      N      Y 
-##   4492 181110 
+##     N     Y  NA's 
+##  1193 46045   118 
 ## 
 ## $stay_in_schl
-##      N      Y 
-##   5640 179962 
+##     N     Y  NA's 
+##  1499 45739   118 
 ## 
 ## $dist_sped
-##      N      Y 
-## 184450   1152 
+##     N     Y  NA's 
+## 46867   371   118 
 ## 
 ## $trgt_assist_fg
-##      N      y      Y 
-## 177626     61   7915 
+##     N     y     Y  NA's 
+## 45205    16  2015   120 
 ## 
 ## $ayp_dist_partic
-##      N      Y 
-##      0 185602 
+##     N     Y 
+##   134 47222 
 ## 
 ## $ayp_schl_partic
-##      N      Y 
-##   1152 184450 
+##     N     Y 
+##   505 46851 
 ## 
 ## $ayp_dist_prfrm
-##      N      Y 
-##   5108 180494 
+##     N     Y 
+##  1467 45889 
 ## 
 ## $ayp_schl_prfrm
-##      N      Y 
-##   7293 178309 
+##     N     Y 
+##  2103 45253 
 ## 
 ## $rc_dist_partic
-##      N      Y 
-##      0 185602 
+##     N     Y 
+##   134 47222 
 ## 
 ## $rc_schl_partic
-##      N      Y 
-##   1152 184450 
+##     N     Y 
+##   505 46851 
 ## 
 ## $rc_dist_prfrm
-##      N      Y 
-##   5108 180494 
+##     N     Y 
+##  1467 45889 
 ## 
 ## $rc_schl_prfrm
-##      N      Y 
-##   7293 178309 
+##     N     Y 
+##  2103 45253 
 ## 
 ## $partic_dist_inst_id
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    1894    2039    2142    2120    2190    4131 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    1894    2041    2142    2120    2190    4131     134 
 ## 
 ## $partic_schl_inst_id
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       1     482     932    1352    1289    5382 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##       1     503     938    1380    1303    5392     134 
 ## 
 ## $lang_cd
-##      E      S 
-## 181317   4285 
+##     E     S 
+## 46280  1076 
 ## 
 ## $tst_atmpt_fg
-##      P      Y 
-##    623 184979 
+##     P     Y 
+##   142 47214 
 ## 
 ## $grp_rpt_dist_partic
-##      N      Y 
-##      0 185602 
+##     N     Y 
+##   134 47222 
 ## 
 ## $grp_rpt_schl_partic
-##      N      Y 
-##   1152 184450 
+##     N     Y 
+##   505 46851 
 ## 
 ## $grp_rpt_dist_prfrm
-##      N      Y 
-##    853 184749 
+##     N     Y 
+##   343 47013 
 ## 
 ## $grp_rpt_schl_prfrm
-##      N      Y 
-##   2004 183598 
+##     N     Y 
+##   714 46642 
 ## 
 ## $score
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    1601    2421    2498    2499    2576    3550 
+##    1662    2422    2498    2499    2576    3091 
 ## 
 ## $ncessch
-##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-## 4.100e+11 4.103e+11 4.108e+11 4.107e+11 4.111e+11 4.114e+11 
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max.      NA's 
+## 4.100e+11 4.103e+11 4.108e+11 4.107e+11 4.111e+11 4.114e+11       775 
 ## 
 ## $lat
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   42.01   44.17   45.25   44.77   45.50   46.18 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##   42.01   44.20   45.25   44.78   45.50   46.18     819 
 ## 
 ## $lon
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##  -124.5  -123.0  -122.8  -122.5  -122.5  -116.9
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##  -124.5  -123.0  -122.8  -122.5  -122.5  -116.9     819
 ```
 
 ---
 # Remove constant variables
+* Also make things really easy and remove missing data
 
 
 ```r
 d &lt;- d %&gt;% 
-  select(-grp_rpt_dist_partic, -rc_dist_partic,
-         -ayp_dist_partic, -calc_admn_cd)
+  # remove any rows or columns that are fully missing
+  janitor::remove_empty(c("rows", "cols")) %&gt;% 
+  
+  # drop any row that has a missing value
+  drop_na() %&gt;% 
+  
+  # drop any column that doesn't have more than 1 unique value
+  select_if(~length(unique(.x)) &gt; 1)
 ```
+
 
 ---
 class:inverse center middle
@@ -339,7 +411,7 @@ Note that this is already our "training" data, but we have to treat it like our 
 --
 
 ```r
-set.seed(123)
+library(tidymodels)
 splt &lt;- initial_split(d, strata = lang_cd)
 train &lt;- training(splt)
 ```
@@ -357,10 +429,10 @@ d %&gt;%
 
 ```
 ## # A tibble: 2 x 3
-##   lang_cd      n       prop
-##   &lt;fct&gt;    &lt;int&gt;      &lt;dbl&gt;
-## 1 E       181317 0.9769130 
-## 2 S         4285 0.02308704
+##   lang_cd     n       prop
+##   &lt;chr&gt;   &lt;int&gt;      &lt;dbl&gt;
+## 1 E       45351 0.9769080 
+## 2 S        1072 0.02309200
 ```
 ]
 
@@ -374,10 +446,10 @@ train %&gt;%
 
 ```
 ## # A tibble: 2 x 3
-##   lang_cd      n       prop
-##   &lt;fct&gt;    &lt;int&gt;      &lt;dbl&gt;
-## 1 E       135921 0.9764299 
-## 2 S         3281 0.02357006
+##   lang_cd     n       prop
+##   &lt;chr&gt;   &lt;int&gt;      &lt;dbl&gt;
+## 1 E       34020 0.9770808 
+## 2 S         798 0.02291918
 ```
 ]
 
@@ -417,18 +489,18 @@ cv
 ```
 ## #  10-fold cross-validation using stratification 
 ## # A tibble: 10 x 2
-##    splits                 id    
-##    &lt;named list&gt;           &lt;chr&gt; 
-##  1 &lt;split [125.3K/13.9K]&gt; Fold01
-##  2 &lt;split [125.3K/13.9K]&gt; Fold02
-##  3 &lt;split [125.3K/13.9K]&gt; Fold03
-##  4 &lt;split [125.3K/13.9K]&gt; Fold04
-##  5 &lt;split [125.3K/13.9K]&gt; Fold05
-##  6 &lt;split [125.3K/13.9K]&gt; Fold06
-##  7 &lt;split [125.3K/13.9K]&gt; Fold07
-##  8 &lt;split [125.3K/13.9K]&gt; Fold08
-##  9 &lt;split [125.3K/13.9K]&gt; Fold09
-## 10 &lt;split [125.3K/13.9K]&gt; Fold10
+##    splits               id    
+##    &lt;named list&gt;         &lt;chr&gt; 
+##  1 &lt;split [31.3K/3.5K]&gt; Fold01
+##  2 &lt;split [31.3K/3.5K]&gt; Fold02
+##  3 &lt;split [31.3K/3.5K]&gt; Fold03
+##  4 &lt;split [31.3K/3.5K]&gt; Fold04
+##  5 &lt;split [31.3K/3.5K]&gt; Fold05
+##  6 &lt;split [31.3K/3.5K]&gt; Fold06
+##  7 &lt;split [31.3K/3.5K]&gt; Fold07
+##  8 &lt;split [31.3K/3.5K]&gt; Fold08
+##  9 &lt;split [31.3K/3.5K]&gt; Fold09
+## 10 &lt;split [31.3K/3.5K]&gt; Fold10
 ```
 
 ---
@@ -450,11 +522,11 @@ cv$splits[[1]] %&gt;%
 ```
 
 ```
-## [1] 13921
+## [1] 3482
 ```
 
 ```r
-13921 / (13921 + 125281)
+3482 / (3482 + 31336)
 ```
 
 ```
@@ -473,11 +545,11 @@ cv$splits[[1]] %&gt;%
 ```
 
 ```
-## [1] 125281
+## [1] 31336
 ```
 
 ```r
-125281 / (13921 + 125281)
+31336 / (3482 + 31336)
 ```
 
 ```
@@ -505,28 +577,28 @@ cv %&gt;%
 
 ```
 ## # A tibble: 20 x 5
-##    splits                 id     lang_cd     n       prop
-##    &lt;named list&gt;           &lt;chr&gt;  &lt;fct&gt;   &lt;int&gt;      &lt;dbl&gt;
-##  1 &lt;split [125.3K/13.9K]&gt; Fold01 E       13598 0.9767976 
-##  2 &lt;split [125.3K/13.9K]&gt; Fold01 S         323 0.02320236
-##  3 &lt;split [125.3K/13.9K]&gt; Fold02 E       13586 0.9759356 
-##  4 &lt;split [125.3K/13.9K]&gt; Fold02 S         335 0.02406436
-##  5 &lt;split [125.3K/13.9K]&gt; Fold03 E       13595 0.9766523 
-##  6 &lt;split [125.3K/13.9K]&gt; Fold03 S         325 0.02334770
-##  7 &lt;split [125.3K/13.9K]&gt; Fold04 E       13588 0.9761494 
-##  8 &lt;split [125.3K/13.9K]&gt; Fold04 S         332 0.02385057
-##  9 &lt;split [125.3K/13.9K]&gt; Fold05 E       13622 0.9785920 
-## 10 &lt;split [125.3K/13.9K]&gt; Fold05 S         298 0.02140805
-## 11 &lt;split [125.3K/13.9K]&gt; Fold06 E       13573 0.9750718 
-## 12 &lt;split [125.3K/13.9K]&gt; Fold06 S         347 0.02492816
-## 13 &lt;split [125.3K/13.9K]&gt; Fold07 E       13597 0.9767960 
-## 14 &lt;split [125.3K/13.9K]&gt; Fold07 S         323 0.02320402
-## 15 &lt;split [125.3K/13.9K]&gt; Fold08 E       13588 0.9761494 
-## 16 &lt;split [125.3K/13.9K]&gt; Fold08 S         332 0.02385057
-## 17 &lt;split [125.3K/13.9K]&gt; Fold09 E       13563 0.9743534 
-## 18 &lt;split [125.3K/13.9K]&gt; Fold09 S         357 0.02564655
-## 19 &lt;split [125.3K/13.9K]&gt; Fold10 E       13611 0.9778017 
-## 20 &lt;split [125.3K/13.9K]&gt; Fold10 S         309 0.02219828
+##    splits               id     lang_cd     n       prop
+##    &lt;named list&gt;         &lt;chr&gt;  &lt;chr&gt;   &lt;int&gt;      &lt;dbl&gt;
+##  1 &lt;split [31.3K/3.5K]&gt; Fold01 E        3402 0.9770247 
+##  2 &lt;split [31.3K/3.5K]&gt; Fold01 S          80 0.02297530
+##  3 &lt;split [31.3K/3.5K]&gt; Fold02 E        3401 0.9767375 
+##  4 &lt;split [31.3K/3.5K]&gt; Fold02 S          81 0.02326249
+##  5 &lt;split [31.3K/3.5K]&gt; Fold03 E        3389 0.9732912 
+##  6 &lt;split [31.3K/3.5K]&gt; Fold03 S          93 0.02670879
+##  7 &lt;split [31.3K/3.5K]&gt; Fold04 E        3408 0.9787478 
+##  8 &lt;split [31.3K/3.5K]&gt; Fold04 S          74 0.02125215
+##  9 &lt;split [31.3K/3.5K]&gt; Fold05 E        3399 0.9761631 
+## 10 &lt;split [31.3K/3.5K]&gt; Fold05 S          83 0.02383688
+## 11 &lt;split [31.3K/3.5K]&gt; Fold06 E        3402 0.9770247 
+## 12 &lt;split [31.3K/3.5K]&gt; Fold06 S          80 0.02297530
+## 13 &lt;split [31.3K/3.5K]&gt; Fold07 E        3407 0.9784607 
+## 14 &lt;split [31.3K/3.5K]&gt; Fold07 S          75 0.02153935
+## 15 &lt;split [31.3K/3.5K]&gt; Fold08 E        3421 0.9824813 
+## 16 &lt;split [31.3K/3.5K]&gt; Fold08 S          61 0.01751867
+## 17 &lt;split [31.3K/3.5K]&gt; Fold09 E        3390 0.9738581 
+## 18 &lt;split [31.3K/3.5K]&gt; Fold09 S          91 0.02614191
+## 19 &lt;split [31.3K/3.5K]&gt; Fold10 E        3401 0.9770181 
+## 20 &lt;split [31.3K/3.5K]&gt; Fold10 S          80 0.02298190
 ```
 
 
@@ -704,18 +776,18 @@ m1
 ```
 ## #  10-fold cross-validation using stratification 
 ## # A tibble: 10 x 4
-##    splits                 id     .metrics         .notes          
-##    &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
-##  1 &lt;split [125.3K/13.9K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  2 &lt;split [125.3K/13.9K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  3 &lt;split [125.3K/13.9K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  4 &lt;split [125.3K/13.9K]&gt; Fold04 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  5 &lt;split [125.3K/13.9K]&gt; Fold05 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  6 &lt;split [125.3K/13.9K]&gt; Fold06 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  7 &lt;split [125.3K/13.9K]&gt; Fold07 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  8 &lt;split [125.3K/13.9K]&gt; Fold08 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  9 &lt;split [125.3K/13.9K]&gt; Fold09 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-## 10 &lt;split [125.3K/13.9K]&gt; Fold10 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##    splits               id     .metrics         .notes          
+##    &lt;list&gt;               &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
+##  1 &lt;split [31.3K/3.5K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  2 &lt;split [31.3K/3.5K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  3 &lt;split [31.3K/3.5K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  4 &lt;split [31.3K/3.5K]&gt; Fold04 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  5 &lt;split [31.3K/3.5K]&gt; Fold05 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  6 &lt;split [31.3K/3.5K]&gt; Fold06 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  7 &lt;split [31.3K/3.5K]&gt; Fold07 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  8 &lt;split [31.3K/3.5K]&gt; Fold08 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  9 &lt;split [31.3K/3.5K]&gt; Fold09 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+## 10 &lt;split [31.3K/3.5K]&gt; Fold10 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
 ```
 
 ---
@@ -736,16 +808,16 @@ m1_metrics
 ## # A tibble: 10 x 4
 ##    id     .estimator     rmse        rsq
 ##    &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt;      &lt;dbl&gt;
-##  1 Fold01 standard   109.6783 0.09307510
-##  2 Fold02 standard   110.2558 0.09416731
-##  3 Fold03 standard   109.9944 0.09448588
-##  4 Fold04 standard   109.7718 0.09280226
-##  5 Fold05 standard   109.4988 0.08682388
-##  6 Fold06 standard   111.0818 0.09129834
-##  7 Fold07 standard   110.5381 0.08503169
-##  8 Fold08 standard   109.7650 0.08914503
-##  9 Fold09 standard   110.9788 0.08901039
-## 10 Fold10 standard   109.4219 0.09836739
+##  1 Fold01 standard   110.5284 0.08974218
+##  2 Fold02 standard   109.1003 0.09944144
+##  3 Fold03 standard   109.0673 0.09026434
+##  4 Fold04 standard   110.7102 0.09914319
+##  5 Fold05 standard   108.9379 0.09960492
+##  6 Fold06 standard   109.8719 0.08570393
+##  7 Fold07 standard   108.1554 0.08931543
+##  8 Fold08 standard   108.8401 0.1072132 
+##  9 Fold09 standard   108.6262 0.1020824 
+## 10 Fold10 standard   112.1286 0.1068249
 ```
 
 .footnote[Note that the model results were not actually saved]
@@ -792,18 +864,18 @@ m2
 ```
 ## #  10-fold cross-validation using stratification 
 ## # A tibble: 10 x 4
-##    splits                 id     .metrics         .notes          
-##    &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
-##  1 &lt;split [125.3K/13.9K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  2 &lt;split [125.3K/13.9K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  3 &lt;split [125.3K/13.9K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  4 &lt;split [125.3K/13.9K]&gt; Fold04 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  5 &lt;split [125.3K/13.9K]&gt; Fold05 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  6 &lt;split [125.3K/13.9K]&gt; Fold06 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  7 &lt;split [125.3K/13.9K]&gt; Fold07 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  8 &lt;split [125.3K/13.9K]&gt; Fold08 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  9 &lt;split [125.3K/13.9K]&gt; Fold09 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-## 10 &lt;split [125.3K/13.9K]&gt; Fold10 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##    splits               id     .metrics         .notes          
+##    &lt;list&gt;               &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
+##  1 &lt;split [31.3K/3.5K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  2 &lt;split [31.3K/3.5K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  3 &lt;split [31.3K/3.5K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  4 &lt;split [31.3K/3.5K]&gt; Fold04 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  5 &lt;split [31.3K/3.5K]&gt; Fold05 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  6 &lt;split [31.3K/3.5K]&gt; Fold06 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  7 &lt;split [31.3K/3.5K]&gt; Fold07 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  8 &lt;split [31.3K/3.5K]&gt; Fold08 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  9 &lt;split [31.3K/3.5K]&gt; Fold09 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+## 10 &lt;split [31.3K/3.5K]&gt; Fold10 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
 ```
 
 
@@ -825,16 +897,16 @@ m2_metrics
 ## # A tibble: 10 x 4
 ##    id     .estimator     rmse        rsq
 ##    &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt;      &lt;dbl&gt;
-##  1 Fold01 standard   109.6598 0.09338219
-##  2 Fold02 standard   110.2317 0.09456479
-##  3 Fold03 standard   109.9663 0.09494939
-##  4 Fold04 standard   109.7731 0.09277420
-##  5 Fold05 standard   109.4603 0.08745710
-##  6 Fold06 standard   111.0939 0.09110418
-##  7 Fold07 standard   110.5445 0.08492744
-##  8 Fold08 standard   109.7516 0.08937167
-##  9 Fold09 standard   110.9490 0.08949487
-## 10 Fold10 standard   109.3987 0.09873319
+##  1 Fold01 standard   110.5301 0.08973596
+##  2 Fold02 standard   109.0852 0.09969244
+##  3 Fold03 standard   109.0596 0.09038034
+##  4 Fold04 standard   110.6956 0.09938052
+##  5 Fold05 standard   108.9510 0.09937968
+##  6 Fold06 standard   109.8492 0.08608010
+##  7 Fold07 standard   108.1676 0.08917341
+##  8 Fold08 standard   108.8173 0.1076011 
+##  9 Fold09 standard   108.5917 0.1026804 
+## 10 Fold10 standard   112.0840 0.1075691
 ```
 
 
@@ -854,16 +926,16 @@ metrics_joined
 ## # A tibble: 10 x 6
 ##    id     .estimator  rmse_m1     rsq_m1  rmse_m2     rsq_m2
 ##    &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;
-##  1 Fold01 standard   109.6783 0.09307510 109.6598 0.09338219
-##  2 Fold02 standard   110.2558 0.09416731 110.2317 0.09456479
-##  3 Fold03 standard   109.9944 0.09448588 109.9663 0.09494939
-##  4 Fold04 standard   109.7718 0.09280226 109.7731 0.09277420
-##  5 Fold05 standard   109.4988 0.08682388 109.4603 0.08745710
-##  6 Fold06 standard   111.0818 0.09129834 111.0939 0.09110418
-##  7 Fold07 standard   110.5381 0.08503169 110.5445 0.08492744
-##  8 Fold08 standard   109.7650 0.08914503 109.7516 0.08937167
-##  9 Fold09 standard   110.9788 0.08901039 110.9490 0.08949487
-## 10 Fold10 standard   109.4219 0.09836739 109.3987 0.09873319
+##  1 Fold01 standard   110.5284 0.08974218 110.5301 0.08973596
+##  2 Fold02 standard   109.1003 0.09944144 109.0852 0.09969244
+##  3 Fold03 standard   109.0673 0.09026434 109.0596 0.09038034
+##  4 Fold04 standard   110.7102 0.09914319 110.6956 0.09938052
+##  5 Fold05 standard   108.9379 0.09960492 108.9510 0.09937968
+##  6 Fold06 standard   109.8719 0.08570393 109.8492 0.08608010
+##  7 Fold07 standard   108.1554 0.08931543 108.1676 0.08917341
+##  8 Fold08 standard   108.8401 0.1072132  108.8173 0.1076011 
+##  9 Fold09 standard   108.6262 0.1020824  108.5917 0.1026804 
+## 10 Fold10 standard   112.1286 0.1068249  112.0840 0.1075691
 ```
 
 ---
@@ -883,16 +955,16 @@ metrics
 ## # A tibble: 40 x 5
 ##    id     .estimator metric model     estimate
 ##    &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;        &lt;dbl&gt;
-##  1 Fold01 standard   rmse   m1    109.6783    
-##  2 Fold01 standard   rsq    m1      0.09307510
-##  3 Fold01 standard   rmse   m2    109.6598    
-##  4 Fold01 standard   rsq    m2      0.09338219
-##  5 Fold02 standard   rmse   m1    110.2558    
-##  6 Fold02 standard   rsq    m1      0.09416731
-##  7 Fold02 standard   rmse   m2    110.2317    
-##  8 Fold02 standard   rsq    m2      0.09456479
-##  9 Fold03 standard   rmse   m1    109.9944    
-## 10 Fold03 standard   rsq    m1      0.09448588
+##  1 Fold01 standard   rmse   m1    110.5284    
+##  2 Fold01 standard   rsq    m1      0.08974218
+##  3 Fold01 standard   rmse   m2    110.5301    
+##  4 Fold01 standard   rsq    m2      0.08973596
+##  5 Fold02 standard   rmse   m1    109.1003    
+##  6 Fold02 standard   rsq    m1      0.09944144
+##  7 Fold02 standard   rmse   m2    109.0852    
+##  8 Fold02 standard   rsq    m2      0.09969244
+##  9 Fold03 standard   rmse   m1    109.0673    
+## 10 Fold03 standard   rsq    m1      0.09026434
 ## # … with 30 more rows
 ```
 
@@ -911,16 +983,16 @@ metrics %&gt;%
 ## # A tibble: 10 x 2
 ##    id     estimate
 ##    &lt;chr&gt;     &lt;dbl&gt;
-##  1 Fold01 109.6598
-##  2 Fold02 110.2317
-##  3 Fold03 109.9663
-##  4 Fold04 109.7718
-##  5 Fold05 109.4603
-##  6 Fold06 111.0818
-##  7 Fold07 110.5381
-##  8 Fold08 109.7516
-##  9 Fold09 110.9490
-## 10 Fold10 109.3987
+##  1 Fold01 110.5284
+##  2 Fold02 109.0852
+##  3 Fold03 109.0596
+##  4 Fold04 110.6956
+##  5 Fold05 108.9379
+##  6 Fold06 109.8492
+##  7 Fold07 108.1554
+##  8 Fold08 108.8173
+##  9 Fold09 108.5917
+## 10 Fold10 112.0840
 ```
 
 ---
@@ -938,16 +1010,16 @@ metrics %&gt;%
 ## # A tibble: 10 x 5
 ##    id     .estimator metric model estimate
 ##    &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt;
-##  1 Fold01 standard   rmse   m2    109.6598
-##  2 Fold02 standard   rmse   m2    110.2317
-##  3 Fold03 standard   rmse   m2    109.9663
-##  4 Fold04 standard   rmse   m1    109.7718
-##  5 Fold05 standard   rmse   m2    109.4603
-##  6 Fold06 standard   rmse   m1    111.0818
-##  7 Fold07 standard   rmse   m1    110.5381
-##  8 Fold08 standard   rmse   m2    109.7516
-##  9 Fold09 standard   rmse   m2    110.9490
-## 10 Fold10 standard   rmse   m2    109.3987
+##  1 Fold01 standard   rmse   m1    110.5284
+##  2 Fold02 standard   rmse   m2    109.0852
+##  3 Fold03 standard   rmse   m2    109.0596
+##  4 Fold04 standard   rmse   m2    110.6956
+##  5 Fold05 standard   rmse   m1    108.9379
+##  6 Fold06 standard   rmse   m2    109.8492
+##  7 Fold07 standard   rmse   m1    108.1554
+##  8 Fold08 standard   rmse   m2    108.8173
+##  9 Fold09 standard   rmse   m2    108.5917
+## 10 Fold10 standard   rmse   m2    112.0840
 ```
 
 
@@ -990,16 +1062,16 @@ metrics_joined %&gt;%
 ## # A tibble: 10 x 3
 ##    id     rmse_diff rsq_diff
 ##    &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt;
-##  1 Fold01  0.018000    0    
-##  2 Fold02  0.024       0    
-##  3 Fold03  0.028       0    
-##  4 Fold04 -0.001       0    
-##  5 Fold05  0.039      -0.001
-##  6 Fold06 -0.012       0    
-##  7 Fold07 -0.006       0    
-##  8 Fold08  0.013       0    
-##  9 Fold09  0.03        0    
-## 10 Fold10  0.023       0
+##  1 Fold01    -0.002    0    
+##  2 Fold02     0.015    0    
+##  3 Fold03     0.008    0    
+##  4 Fold04     0.015    0    
+##  5 Fold05    -0.013    0    
+##  6 Fold06     0.023    0    
+##  7 Fold07    -0.012    0    
+##  8 Fold08     0.023    0    
+##  9 Fold09     0.034   -0.001
+## 10 Fold10     0.045   -0.001
 ```
 
 --
@@ -1012,11 +1084,12 @@ metrics_joined %&gt;%
 
 
 --
-!
+
 .center[
 ![](https://koalaverse.github.io/vip/reference/figures/logo-vip.png)
-]-
---
+]
+
+---
 # VIP
 * `vip::vip`: Create a `v`ariable `i`mportance `p`lot
 * `vip::vi`: Estimate `v`ariable `i`mportance (numbers)
@@ -1033,9 +1106,9 @@ vi(m)
 ## # A tibble: 3 x 3
 ##   Variable        Importance Sign 
 ##   &lt;chr&gt;                &lt;dbl&gt; &lt;chr&gt;
-## 1 sp_ed_fgY        77.23053  NEG  
-## 2 gndrM             6.807127 POS  
-## 3 gndrM:sp_ed_fgY   6.439259 POS
+## 1 sp_ed_fgY        39.68590  NEG  
+## 2 gndrM:sp_ed_fgY   3.086095 POS  
+## 3 gndrM             2.129051 POS
 ```
 
 ---
@@ -1089,20 +1162,20 @@ vip_1b
 ```
 
 ```
-## # A tibble: 48 x 3
+## # A tibble: 46 x 3
 ##    Variable     Importance Sign 
 ##    &lt;chr&gt;             &lt;dbl&gt; &lt;chr&gt;
-##  1 tag_ed_fgY    117.4957  POS  
-##  2 sp_ed_fgY     109.1892  NEG  
-##  3 econ_dsvntgY   77.75669 NEG  
-##  4 ethnic_cdB     44.59635 NEG  
-##  5 ethnic_cdH     39.03411 NEG  
-##  6 tst_dt         34.35133 POS  
-##  7 ethnic_cdW     26.76342 NEG  
-##  8 ethnic_cdM     23.95652 NEG  
-##  9 ethnic_cdI     22.80560 NEG  
-## 10 ethnic_cdP     21.52754 NEG  
-## # … with 38 more rows
+##  1 tag_ed_fgY    58.28341  POS  
+##  2 sp_ed_fgY     56.30205  NEG  
+##  3 econ_dsvntgY  37.98245  NEG  
+##  4 ethnic_cdB    23.01783  NEG  
+##  5 ethnic_cdH    19.56920  NEG  
+##  6 tst_dt        16.42276  POS  
+##  7 ethnic_cdW    13.51227  NEG  
+##  8 ethnic_cdM    12.12659  NEG  
+##  9 ethnic_cdI    11.52878  NEG  
+## 10 ethnic_cdP     9.675022 NEG  
+## # … with 36 more rows
 ```
 
 
@@ -1136,18 +1209,18 @@ m3
 ```
 ## #  10-fold cross-validation using stratification 
 ## # A tibble: 10 x 4
-##    splits                 id     .metrics         .notes          
-##    &lt;list&gt;                 &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
-##  1 &lt;split [125.3K/13.9K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  2 &lt;split [125.3K/13.9K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  3 &lt;split [125.3K/13.9K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  4 &lt;split [125.3K/13.9K]&gt; Fold04 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  5 &lt;split [125.3K/13.9K]&gt; Fold05 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  6 &lt;split [125.3K/13.9K]&gt; Fold06 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  7 &lt;split [125.3K/13.9K]&gt; Fold07 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  8 &lt;split [125.3K/13.9K]&gt; Fold08 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-##  9 &lt;split [125.3K/13.9K]&gt; Fold09 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
-## 10 &lt;split [125.3K/13.9K]&gt; Fold10 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##    splits               id     .metrics         .notes          
+##    &lt;list&gt;               &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          
+##  1 &lt;split [31.3K/3.5K]&gt; Fold01 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  2 &lt;split [31.3K/3.5K]&gt; Fold02 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  3 &lt;split [31.3K/3.5K]&gt; Fold03 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  4 &lt;split [31.3K/3.5K]&gt; Fold04 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  5 &lt;split [31.3K/3.5K]&gt; Fold05 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  6 &lt;split [31.3K/3.5K]&gt; Fold06 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  7 &lt;split [31.3K/3.5K]&gt; Fold07 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  8 &lt;split [31.3K/3.5K]&gt; Fold08 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+##  9 &lt;split [31.3K/3.5K]&gt; Fold09 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
+## 10 &lt;split [31.3K/3.5K]&gt; Fold10 &lt;tibble [2 × 3]&gt; &lt;tibble [0 × 1]&gt;
 ```
 
 
@@ -1167,21 +1240,21 @@ m3 %&gt;%
 ## # A tibble: 10 x 4
 ##    id     .estimator     rmse       rsq
 ##    &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;
-##  1 Fold01 standard   97.84657 0.2781628
-##  2 Fold02 standard   98.04669 0.2836478
-##  3 Fold03 standard   97.56858 0.2875058
-##  4 Fold04 standard   97.63753 0.2821901
-##  5 Fold05 standard   97.42491 0.2769661
-##  6 Fold06 standard   99.17022 0.2756263
-##  7 Fold07 standard   97.88499 0.2825361
-##  8 Fold08 standard   97.48603 0.2815878
-##  9 Fold09 standard   98.06879 0.2888086
-## 10 Fold10 standard   97.36285 0.2860995
+##  1 Fold01 standard   97.32035 0.2940837
+##  2 Fold02 standard   96.40935 0.2968018
+##  3 Fold03 standard   97.26262 0.2763919
+##  4 Fold04 standard   98.65282 0.2846609
+##  5 Fold05 standard   97.17828 0.2834393
+##  6 Fold06 standard   97.69099 0.2771417
+##  7 Fold07 standard   95.94327 0.2830697
+##  8 Fold08 standard   97.73500 0.2799697
+##  9 Fold09 standard   98.31399 0.2654712
+## 10 Fold10 standard   99.12599 0.3028104
 ```
 
 ---
 ## Improving model performance further
-* Other variables? (e.g., grade level of general assessment)
+* Other variables? (e.g., grade level)
 
 * Interactions?
   + `step_interact`
@@ -1201,7 +1274,7 @@ m3 %&gt;%
 
 Try to refine this model further to boost model performance more! Consider modifications listed in previous slide (inclusion of other variables, nonlinear terms, or interactions)
 
-<div class="countdown" id="timer_5e8d2e1d" style="top:0.5;right:0.5;bottom:0.5;left:0.75;" data-warnwhen="0">
+<div class="countdown" id="timer_5e910a55" style="top:0.5;right:0.5;bottom:0.5;left:0.75;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">10</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 
@@ -1209,9 +1282,19 @@ Try to refine this model further to boost model performance more! Consider modif
 # Evaluation on test set
 * Note we wouldn't usually jump to this point yet, but let's try.
 
-
 --
-### First: Extract test dataset
+### First: Fit model to full training data
+
+
+```r
+test_mod &lt;- mod %&gt;% 
+  fit(score ~ tag_ed_fg + sp_ed_fg + econ_dsvntg +
+              tst_dt + ethnic_cd, 
+      data = train) 
+```
+
+---
+### Next: Extract test dataset
 
 
 ```r
@@ -1220,78 +1303,28 @@ test
 ```
 
 ```
-## # A tibble: 46,400 x 35
-##       id gndr  ethnic_cd attnd_dist_inst_id attnd_schl_inst_id enrl_grd tst_bnch
-##    &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt;                  &lt;dbl&gt;              &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;   
-##  1    24 F     W                       2243               1182        8 3B      
-##  2    34 M     H                       1928                115        8 3B      
-##  3    43 M     W                       1922               5377        8 3B      
-##  4    45 M     H                       1924               3530        7 G7      
-##  5    56 F     H                       1970                224        8 3B      
-##  6    60 M     H                       1974                235        7 G7      
-##  7    64 M     W                       2100               4744        7 G7      
-##  8    67 F     W                       2100                638        8 3B      
-##  9    71 M     W                       2100                638        7 G7      
-## 10    75 F     H                       2100                642        7 G7      
-## # … with 46,390 more rows, and 28 more variables: tst_dt &lt;date&gt;,
-## #   migrant_ed_fg &lt;fct&gt;, ind_ed_fg &lt;fct&gt;, sp_ed_fg &lt;fct&gt;, tag_ed_fg &lt;fct&gt;,
-## #   econ_dsvntg &lt;fct&gt;, ayp_lep &lt;fct&gt;, stay_in_dist &lt;fct&gt;, stay_in_schl &lt;fct&gt;,
-## #   dist_sped &lt;fct&gt;, trgt_assist_fg &lt;fct&gt;, ayp_schl_partic &lt;fct&gt;,
-## #   ayp_dist_prfrm &lt;fct&gt;, ayp_schl_prfrm &lt;fct&gt;, rc_schl_partic &lt;fct&gt;,
-## #   rc_dist_prfrm &lt;fct&gt;, rc_schl_prfrm &lt;fct&gt;, partic_dist_inst_id &lt;dbl&gt;,
-## #   partic_schl_inst_id &lt;dbl&gt;, lang_cd &lt;fct&gt;, tst_atmpt_fg &lt;fct&gt;,
-## #   grp_rpt_schl_partic &lt;fct&gt;, grp_rpt_dist_prfrm &lt;fct&gt;,
-## #   grp_rpt_schl_prfrm &lt;fct&gt;, score &lt;dbl&gt;, ncessch &lt;dbl&gt;, lat &lt;dbl&gt;, lon &lt;dbl&gt;
-```
-
----
-# Fit model
-
-
-```r
-test_mod &lt;- mod %&gt;% 
-  fit(score ~ tag_ed_fg + sp_ed_fg + econ_dsvntg +
-              tst_dt + ethnic_cd, 
-*     data = test)
-```
-
----
-# Look at model
-### Just for fun
-
-
-```r
-summary(test_mod$fit)
-```
-
-```
-## 
-## Call:
-## stats::lm(formula = formula, data = data)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -759.83  -64.33   -0.42   64.77  539.33 
-## 
-## Coefficients:
-##                Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  -6.657e+03  7.013e+02  -9.493   &lt;2e-16 ***
-## tag_ed_fgY    1.317e+02  2.015e+00  65.342   &lt;2e-16 ***
-## sp_ed_fgY    -8.725e+01  1.342e+00 -65.029   &lt;2e-16 ***
-## econ_dsvntgY -5.300e+01  9.921e-01 -53.421   &lt;2e-16 ***
-## tst_dt        5.224e-01  3.969e-02  13.163   &lt;2e-16 ***
-## ethnic_cdB   -9.661e+01  3.833e+00 -25.203   &lt;2e-16 ***
-## ethnic_cdH   -6.225e+01  2.464e+00 -25.267   &lt;2e-16 ***
-## ethnic_cdI   -5.681e+01  4.557e+00 -12.465   &lt;2e-16 ***
-## ethnic_cdM   -3.752e+01  2.885e+00 -13.003   &lt;2e-16 ***
-## ethnic_cdP   -6.687e+01  5.621e+00 -11.896   &lt;2e-16 ***
-## ethnic_cdW   -3.007e+01  2.310e+00 -13.014   &lt;2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## Residual standard error: 97.93 on 46389 degrees of freedom
-## Multiple R-squared:  0.2846,	Adjusted R-squared:  0.2844 
-## F-statistic:  1845 on 10 and 46389 DF,  p-value: &lt; 2.2e-16
+## # A tibble: 11,605 x 35
+##        id gndr  ethnic_cd attnd_dist_inst_id attnd_schl_inst_id enrl_grd
+##     &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;                  &lt;dbl&gt;              &lt;dbl&gt;    &lt;dbl&gt;
+##  1 182007 M     H                       2142                751        4
+##  2 219059 F     H                       2048               5205        3
+##  3 139302 F     M                       2054                441        6
+##  4 191166 M     H                       2256               4639        3
+##  5  40916 M     M                       2239               1148        4
+##  6 217476 M     W                       2142                740        3
+##  7 146634 F     H                       2183                933        5
+##  8 224206 F     W                       2244               4730        3
+##  9  29278 M     M                       2082                518        8
+## 10 214204 F     I                       2056                465        3
+## # … with 11,595 more rows, and 29 more variables: tst_bnch &lt;chr&gt;,
+## #   tst_dt &lt;date&gt;, migrant_ed_fg &lt;chr&gt;, ind_ed_fg &lt;chr&gt;, sp_ed_fg &lt;chr&gt;,
+## #   tag_ed_fg &lt;chr&gt;, econ_dsvntg &lt;chr&gt;, ayp_lep &lt;chr&gt;, stay_in_dist &lt;chr&gt;,
+## #   stay_in_schl &lt;chr&gt;, dist_sped &lt;chr&gt;, trgt_assist_fg &lt;chr&gt;,
+## #   ayp_schl_partic &lt;chr&gt;, ayp_dist_prfrm &lt;chr&gt;, ayp_schl_prfrm &lt;chr&gt;,
+## #   rc_schl_partic &lt;chr&gt;, rc_dist_prfrm &lt;chr&gt;, rc_schl_prfrm &lt;chr&gt;,
+## #   partic_dist_inst_id &lt;dbl&gt;, partic_schl_inst_id &lt;dbl&gt;, lang_cd &lt;chr&gt;,
+## #   tst_atmpt_fg &lt;chr&gt;, grp_rpt_schl_partic &lt;chr&gt;, grp_rpt_dist_prfrm &lt;chr&gt;,
+## #   grp_rpt_schl_prfrm &lt;chr&gt;, score &lt;dbl&gt;, ncessch &lt;dbl&gt;, lat &lt;dbl&gt;, lon &lt;dbl&gt;
 ```
 
 ---
@@ -1306,20 +1339,20 @@ preds
 ```
 
 ```
-## # A tibble: 46,400 x 2
+## # A tibble: 11,605 x 2
 ##    truth estimate
 ##    &lt;dbl&gt;    &lt;dbl&gt;
-##  1  2574 2545.805
-##  2  2355 2422.717
-##  3  2366 2455.424
-##  4  2490 2460.624
-##  5  2261 2373.377
-##  6  2453 2456.444
-##  7  2291 2402.950
-##  8  2492 2493.331
-##  9  2417 2492.808
-## 10  2522 2509.964
-## # … with 46,390 more rows
+##  1  2430 2364.985
+##  2  2326 2461.778
+##  3  2435 2487.387
+##  4  2395 2375.315
+##  5  2658 2666.598
+##  6  2351 2488.350
+##  7  2393 2457.646
+##  8  2502 2544.793
+##  9  2192 2540.215
+## 10  2325 2458.488
+## # … with 11,595 more rows
 ```
 
 ---
@@ -1337,8 +1370,8 @@ bind_rows(
 ## # A tibble: 2 x 3
 ##   .metric .estimator  .estimate
 ##   &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt;
-## 1 rmse    standard   97.91891  
-## 2 rsq     standard    0.2845741
+## 1 rmse    standard   96.87855  
+## 2 rsq     standard    0.2841366
 ```
 
 ---
@@ -1399,11 +1432,12 @@ see [yardstick documentation](https://tidymodels.github.io/yardstick/reference/i
   + .r[Cons]: Less familiar and interpretable; does not translate to common measure of central tenancy
 
 ---
-# Huber loss vs squared errors
+# Huber loss 
+Compared to .b[squared errors]
 
 .center[
 
-&lt;img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Huber_loss.svg/1920px-Huber_loss.svg.png" height="500px" /&gt;
+&lt;img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Huber_loss.svg/1920px-Huber_loss.svg.png" height="400px" /&gt;
 
 ]
 
